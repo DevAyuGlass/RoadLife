@@ -46,5 +46,5 @@ android {
 }
 
 dependencies {
-    implementation files("libs/SDL3-3.2.16.aar")
+    implementation files("libs/SDL3-3.4.16.aar")
 }
