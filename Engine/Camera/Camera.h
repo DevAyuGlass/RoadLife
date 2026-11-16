@@ -13,6 +13,10 @@ public:
 
     glm::mat4 getViewMatrix() const;
     glm::vec3 getPosition() const;
+    float getMovementSpeed() const;
+    void setMovementSpeed(float speed);
+    void setPosition(const glm::vec3& value);
+    void reset();
 
 private:
     glm::vec3 position;
