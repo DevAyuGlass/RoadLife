@@ -846,13 +846,12 @@ void Scene::render(
 {
     renderSky(view, projection);
 
-    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-
+    // Keep the shadow map solid even when the visible scene is wireframe.
     if (sunHeight > 0.0f)
         renderDepthPass();
 
+    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
     renderObjects(view, projection);
-
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
