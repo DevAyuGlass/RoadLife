@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 class Camera;
+class Scene;
 
 class InputManager
 {
@@ -15,7 +16,7 @@ public:
 
     void handleEvent(const SDL_Event& event, int viewportWidth, int viewportHeight);
     void shutdown();
-    void update(Camera& camera, float deltaTime, bool enabled);
+    void update(Camera& camera, Scene& scene, float deltaTime, bool enabled);
     void reset();
 
     bool hasGamepad() const;

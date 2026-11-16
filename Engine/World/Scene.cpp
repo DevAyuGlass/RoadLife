@@ -489,6 +489,105 @@ void Scene::clearObjects()
     objects.clear();
 }
 
+// ============================================================
+// PLAYER COLLISION
+// ============================================================
+
+void Scene::resolvePlayerCollision(
+    const glm::vec3& previousPosition,
+    glm::vec3& position,
+    float radius,
+    float eyeHeight,
+    float bodyHeight,
+    float& verticalVelocity,
+    bool& grounded
+) const
+{
+    constexpr float groundY = -1.02f;
+    const float previousFeet = previousPosition.y - eyeHeight;
+    float feet = position.y - eyeHeight;
+    const float head = feet + bodyHeight;
+
+    // Resolve horizontal movement against solid cube AABBs. Axis separation
+    // allows the player to slide along walls instead of getting stuck.
+    for (const auto& object : objects)
+    {
+        const glm::vec3 half = object.scale;
+        const float minX = object.position.x - half.x;
+        const float maxX = object.position.x + half.x;
+        const float minY = object.position.y - half.y;
+        const float maxY = object.position.y + half.y;
+        const float minZ = object.position.z - half.z;
+        const float maxZ = object.position.z + half.z;
+
+        const bool verticalOverlap = feet < maxY - 0.001f &&
+                                     head > minY + 0.001f;
+        if (!verticalOverlap)
+            continue;
+
+        const bool zOverlap = position.z + radius > minZ &&
+                              position.z - radius < maxZ;
+        if (zOverlap && position.x + radius > minX &&
+            position.x - radius < maxX)
+        {
+            position.x = previousPosition.x <= object.position.x
+                ? minX - radius : maxX + radius;
+        }
+
+        const bool xOverlap = position.x + radius > minX &&
+                              position.x - radius < maxX;
+        if (xOverlap && position.z + radius > minZ &&
+            position.z - radius < maxZ)
+        {
+            position.z = previousPosition.z <= object.position.z
+                ? minZ - radius : maxZ + radius;
+        }
+
+        // Stop the jump when the player's head hits the underside of a cube.
+        const float previousHead = previousFeet + bodyHeight;
+        if (verticalVelocity > 0.0f &&
+            previousHead <= minY + 0.05f &&
+            head >= minY &&
+            position.x + radius > minX && position.x - radius < maxX &&
+            position.z + radius > minZ && position.z - radius < maxZ)
+        {
+            position.y = minY - bodyHeight + eyeHeight;
+            verticalVelocity = 0.0f;
+            feet = position.y - eyeHeight;
+        }
+    }
+
+    // The ground and the top faces of cubes are walkable surfaces.
+    float supportY = groundY;
+    for (const auto& object : objects)
+    {
+        const float minX = object.position.x - object.scale.x;
+        const float maxX = object.position.x + object.scale.x;
+        const float minZ = object.position.z - object.scale.z;
+        const float maxZ = object.position.z + object.scale.z;
+        const float topY = object.position.y + object.scale.y;
+
+        const bool overTop = position.x + radius > minX &&
+                             position.x - radius < maxX &&
+                             position.z + radius > minZ &&
+                             position.z - radius < maxZ;
+        if (overTop && topY > supportY &&
+            previousFeet >= topY - 0.12f && feet <= topY + 0.08f)
+            supportY = topY;
+    }
+
+    if (verticalVelocity <= 0.0f && feet <= supportY + 0.08f)
+    {
+        position.y = supportY + eyeHeight;
+        verticalVelocity = 0.0f;
+        grounded = true;
+    }
+    else
+    {
+        grounded = false;
+    }
+}
+
 void Scene::update(float deltaTime)
 {
     // 24 игровых часов за 20 реальных минут.

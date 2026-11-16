@@ -210,7 +210,7 @@ void Application::update()
     constexpr bool timePaused = false;
     constexpr float timeScale = 1.0f;
 #endif
-    input.update(camera, time.getDeltaTime(),
+    input.update(camera, *scene, time.getDeltaTime(),
 #if !defined(__ANDROID__)
         !consoleOpen
 #else

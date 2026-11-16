@@ -1,6 +1,7 @@
 #include "InputManager.h"
 
 #include "../Camera/Camera.h"
+#include "../World/Scene.h"
 
 #include <algorithm>
 #include <cmath>
@@ -143,6 +144,7 @@ void InputManager::handleEvent(
 
 void InputManager::update(
     Camera& camera,
+    Scene& scene,
     float deltaTime,
     bool enabled
 )
@@ -220,7 +222,7 @@ void InputManager::update(
     forward = std::clamp(forward, -1.0f, 1.0f);
     vertical = std::clamp(vertical, -1.0f, 1.0f);
 
-    camera.processMovement(forward, strafe, vertical, sprint, deltaTime);
+    camera.processMovement(forward, strafe, vertical, sprint, scene, deltaTime);
 }
 
 void InputManager::reset()

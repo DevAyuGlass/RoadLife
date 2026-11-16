@@ -39,6 +39,10 @@ public:
     std::size_t getObjectCount() const;
     bool spawnCube(const glm::vec3& position, float scale);
     void clearObjects();
+    void resolvePlayerCollision(const glm::vec3& previousPosition,
+                                glm::vec3& position, float radius,
+                                float eyeHeight, float bodyHeight,
+                                float& verticalVelocity, bool& grounded) const;
 
     void render(
         const glm::mat4& view,
