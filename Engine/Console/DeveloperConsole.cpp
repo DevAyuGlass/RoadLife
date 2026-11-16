@@ -2,6 +2,7 @@
 #include "DeveloperConsole.h"
 
 #include "../World/Scene.h"
+#include "../Camera/Camera.h"
 
 #include <algorithm>
 #include <cmath>
@@ -202,7 +203,7 @@ std::string DeveloperConsole::formatTime(float hours)
 // COMMAND EXECUTION
 // ------------------------------------------------------------
 
-void DeveloperConsole::executeCommand(Scene& scene, float fps)
+void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
 {
     if (input.empty())
         return;
@@ -237,6 +238,16 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
         addLine("  wireframe            - toggle wireframe rendering");
         addLine("  fog                  - show fog state");
         addLine("  fog on|off           - enable or disable distance fog");
+        addLine("  fog density 0.01     - set fog density (0.0001..0.1)");
+        addLine("  shadows [on|off]     - toggle shadow mapping");
+        addLine("  grid [on|off]        - toggle ground grid");
+        addLine("  camera               - show camera position and speed");
+        addLine("  camera speed 10      - set movement speed (0.1..100)");
+        addLine("  camera reset         - reset camera position and rotation");
+        addLine("  camera teleport x y z- move camera to coordinates");
+        addLine("  objects              - show scene object count");
+        addLine("  spawn cube x y z [s] - spawn a cube (default size 1)");
+        addLine("  objects clear        - remove all scene cubes");
     }
     else if (first == "clear")
     {
@@ -280,6 +291,129 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
         {
             addLine("[WARNING] Usage: fog [on|off]");
         }
+    }
+    else if (first == "shadows")
+    {
+        if (second.empty())
+        {
+            addLine(scene.areShadowsEnabled() ? "[INFO] Shadows: enabled." : "[INFO] Shadows: disabled.");
+        }
+        else if (second == "on" || second == "off")
+        {
+            scene.setShadowsEnabled(second == "on");
+            addLine(second == "on" ? "[SUCCESS] Shadows enabled." : "[SUCCESS] Shadows disabled.");
+        }
+        else addLine("[WARNING] Usage: shadows [on|off]");
+    }
+    else if (first == "grid")
+    {
+        if (second.empty())
+            addLine(scene.isGridEnabled() ? "[INFO] Grid: enabled." : "[INFO] Grid: disabled.");
+        else if (second == "on" || second == "off")
+        {
+            scene.setGridEnabled(second == "on");
+            addLine(second == "on" ? "[SUCCESS] Grid enabled." : "[SUCCESS] Grid disabled.");
+        }
+        else addLine("[WARNING] Usage: grid [on|off]");
+    }
+    else if (first == "camera")
+    {
+        if (second.empty())
+        {
+            const glm::vec3 p = camera.getPosition();
+            std::ostringstream result;
+            result << std::fixed << std::setprecision(2)
+                   << "[INFO] Position: " << p.x << ", " << p.y << ", " << p.z
+                   << " | Speed: " << camera.getMovementSpeed();
+            addLine(result.str());
+        }
+        else if (second == "speed")
+        {
+            try
+            {
+                std::size_t parsed = 0;
+                const float value = std::stof(third, &parsed);
+                if (parsed != third.size() || !std::isfinite(value) || value < 0.1f || value > 100.0f)
+                    throw std::out_of_range("Invalid camera speed");
+                camera.setMovementSpeed(value);
+                addLine("[SUCCESS] Camera speed set to " + std::to_string(camera.getMovementSpeed()));
+            }
+            catch (...) { addLine("[ERROR] Usage: camera speed 0.1..100"); }
+        }
+        else if (second == "reset")
+        {
+            camera.reset();
+            addLine("[SUCCESS] Camera reset.");
+        }
+        else if (second == "teleport")
+        {
+            std::string sx, sy, sz;
+            stream >> sx >> sy >> sz;
+            try
+            {
+                std::size_t px = 0, py = 0, pz = 0;
+                const float x = std::stof(sx, &px);
+                const float y = std::stof(sy, &py);
+                const float z = std::stof(sz, &pz);
+                if (px != sx.size() || py != sy.size() || pz != sz.size() ||
+                    !std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
+                    throw std::out_of_range("Invalid coordinates");
+                camera.setPosition(glm::vec3(x, y, z));
+                addLine("[SUCCESS] Camera teleported.");
+            }
+            catch (...) { addLine("[ERROR] Usage: camera teleport x y z"); }
+        }
+        else addLine("[WARNING] Usage: camera [speed|reset|teleport]");
+    }
+    else if (first == "objects")
+    {
+        if (second == "clear")
+        {
+            scene.clearObjects();
+            addLine("[SUCCESS] All scene cubes removed.");
+        }
+        else addLine("[INFO] Scene cubes: " + std::to_string(scene.getObjectCount()));
+    }
+    else if (first == "spawn")
+    {
+        std::string sx, sy, sz, ss;
+        stream >> sx >> sy >> sz >> ss;
+        if (second != "cube")
+        {
+            addLine("[WARNING] Usage: spawn cube x y z [scale]");
+        }
+        else
+        {
+            try
+            {
+                std::size_t px = 0, py = 0, pz = 0, ps = 0;
+                const float x = std::stof(sx, &px);
+                const float y = std::stof(sy, &py);
+                const float z = std::stof(sz, &pz);
+                const float scale = ss.empty() ? 1.0f : std::stof(ss, &ps);
+                if (px != sx.size() || py != sy.size() || pz != sz.size() ||
+                    (!ss.empty() && ps != ss.size()) ||
+                    !std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z) || !std::isfinite(scale) ||
+                    std::abs(x) > 10000.0f || std::abs(y) > 10000.0f || std::abs(z) > 10000.0f || scale < 0.1f || scale > 20.0f)
+                    throw std::out_of_range("Invalid cube parameters");
+                scene.spawnCube(glm::vec3(x, y, z), scale);
+                addLine("[SUCCESS] Cube spawned. Total: " + std::to_string(scene.getObjectCount()));
+            }
+            catch (...) { addLine("[ERROR] Usage: spawn cube x y z [scale]"); }
+        }
+    }
+    else if (first == "fog" && second == "density")
+    {
+        try
+        {
+            std::size_t parsed = 0;
+            const float value = std::stof(third, &parsed);
+            if (parsed != third.size() || !std::isfinite(value) || value < 0.0001f || value > 0.1f)
+                throw std::out_of_range("Invalid fog density");
+            scene.setFogDensity(value);
+            addLine("[SUCCESS] Fog density: " + std::to_string(scene.getFogDensity()));
+        }
+        catch (...) { addLine("[ERROR] Usage: fog density 0.0001..0.1"); }
     }
     else if (first == "time")
     {
@@ -426,18 +560,11 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
 
 void DeveloperConsole::autocomplete()
 {
-    const std::array<std::string, 11> commands = {
-        "help",
-        "clear",
-        "fps",
-        "time",
-        "time set",
-        "time scale",
-        "time pause",
-        "time resume",
-        "wireframe",
-        "fog",
-        "time"
+    const std::vector<std::string> commands = {
+        "help", "clear", "fps", "time", "time set", "time scale",
+        "time pause", "time resume", "wireframe", "fog", "fog density",
+        "shadows", "grid", "camera", "camera speed", "camera reset",
+        "camera teleport", "objects", "objects clear", "spawn cube"
     };
 
     std::vector<std::string> matches;
@@ -478,6 +605,7 @@ void DeveloperConsole::autocomplete()
 void DeveloperConsole::handleEvent(
     const SDL_Event& event,
     Scene& scene,
+    Camera& camera,
     float fps
 )
 {
@@ -497,12 +625,17 @@ void DeveloperConsole::handleEvent(
     {
         case SDLK_BACKSPACE:
             if (!input.empty())
+            {
                 input.pop_back();
+                while (!input.empty() &&
+                       (static_cast<unsigned char>(input.back()) & 0xC0) == 0x80)
+                    input.pop_back();
+            }
             break;
 
         case SDLK_RETURN:
         case SDLK_KP_ENTER:
-            executeCommand(scene, fps);
+            executeCommand(scene, camera, fps);
             break;
 
         case SDLK_UP:
