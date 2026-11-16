@@ -1,6 +1,8 @@
 #include "Application.h"
 
+#if defined(__ANDROID__)
 #include <SDL3/SDL_main.h>
+#endif
 
 #include <iostream>
 
