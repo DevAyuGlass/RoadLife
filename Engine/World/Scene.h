@@ -6,6 +6,7 @@
 #include "../Renderer/ShadowMap.h"
 
 #include <glm/glm.hpp>
+#include <cstddef>
 #include <memory>
 #include <vector>
 #include <epoxy/gl.h>
