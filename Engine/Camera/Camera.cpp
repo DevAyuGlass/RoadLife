@@ -31,28 +31,43 @@ glm::vec3 Camera::getFront() const
 
 void Camera::processKeyboard(const bool* keys, float deltaTime)
 {
-    glm::vec3 front = getFront();
+    const float forward =
+        (keys[SDL_SCANCODE_W] ? 1.0f : 0.0f) -
+        (keys[SDL_SCANCODE_S] ? 1.0f : 0.0f);
+    const float strafe =
+        (keys[SDL_SCANCODE_D] ? 1.0f : 0.0f) -
+        (keys[SDL_SCANCODE_A] ? 1.0f : 0.0f);
+    const float vertical =
+        (keys[SDL_SCANCODE_SPACE] ? 1.0f : 0.0f) -
+        (keys[SDL_SCANCODE_LCTRL] ? 1.0f : 0.0f);
+    const bool sprint =
+        keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
 
-    glm::vec3 right = glm::normalize(
+    processMovement(forward, strafe, vertical, sprint, deltaTime);
+}
+
+void Camera::processMovement(
+    float forward,
+    float strafe,
+    float vertical,
+    bool sprint,
+    float deltaTime
+)
+{
+    const glm::vec3 front = getFront();
+    const glm::vec3 right = glm::normalize(
         glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f))
     );
 
-    glm::vec3 movement(0.0f);
+    glm::vec3 movement =
+        front * forward +
+        right * strafe +
+        glm::vec3(0.0f, vertical, 0.0f);
 
-    if (keys[SDL_SCANCODE_W]) movement += front;
-    if (keys[SDL_SCANCODE_S]) movement -= front;
-    if (keys[SDL_SCANCODE_D]) movement += right;
-    if (keys[SDL_SCANCODE_A]) movement -= right;
-    if (keys[SDL_SCANCODE_SPACE]) movement.y += 1.0f;
-    if (keys[SDL_SCANCODE_LCTRL]) movement.y -= 1.0f;
-
-    // Normalize input so diagonal movement is not faster.
     const float movementLength = glm::length(movement);
     if (movementLength > 0.0f)
     {
-        const float sprintMultiplier =
-            (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT])
-                ? 3.0f : 1.0f;
+        const float sprintMultiplier = sprint ? 3.0f : 1.0f;
         position += (movement / movementLength) *
                     movementSpeed * sprintMultiplier * deltaTime;
     }
