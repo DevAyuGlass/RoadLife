@@ -274,11 +274,31 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
     }
     else if (first == "fog")
     {
-        if (second.empty())
+        if (second == "density")
         {
-            addLine(scene.isFogEnabled()
-                ? "[INFO] Distance fog: enabled."
-                : "[INFO] Distance fog: disabled.");
+            try
+            {
+                std::size_t parsed = 0;
+                const float value = std::stof(third, &parsed);
+                if (parsed != third.size() || !std::isfinite(value) ||
+                    value < 0.0001f || value > 0.1f)
+                    throw std::out_of_range("Invalid fog density");
+                scene.setFogDensity(value);
+                addLine("[SUCCESS] Fog density: " + std::to_string(scene.getFogDensity()));
+            }
+            catch (...)
+            {
+                addLine("[ERROR] Usage: fog density 0.0001..0.1");
+            }
+        }
+        else if (second.empty())
+        {
+            std::ostringstream result;
+            result << "[INFO] Distance fog: "
+                   << (scene.isFogEnabled() ? "enabled" : "disabled")
+                   << " | density: " << std::fixed << std::setprecision(4)
+                   << scene.getFogDensity();
+            addLine(result.str());
         }
         else if (second == "on" || second == "off")
         {
@@ -289,7 +309,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         }
         else
         {
-            addLine("[WARNING] Usage: fog [on|off]");
+            addLine("[WARNING] Usage: fog [on|off|density value]");
         }
     }
     else if (first == "shadows")
@@ -376,8 +396,8 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
     }
     else if (first == "spawn")
     {
-        std::string sx, sy, sz, ss;
-        stream >> sx >> sy >> sz >> ss;
+        std::string sx = third, sy, sz, ss;
+        stream >> sy >> sz >> ss;
         if (second != "cube")
         {
             addLine("[WARNING] Usage: spawn cube x y z [scale]");
@@ -401,19 +421,6 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
             }
             catch (...) { addLine("[ERROR] Usage: spawn cube x y z [scale]"); }
         }
-    }
-    else if (first == "fog" && second == "density")
-    {
-        try
-        {
-            std::size_t parsed = 0;
-            const float value = std::stof(third, &parsed);
-            if (parsed != third.size() || !std::isfinite(value) || value < 0.0001f || value > 0.1f)
-                throw std::out_of_range("Invalid fog density");
-            scene.setFogDensity(value);
-            addLine("[SUCCESS] Fog density: " + std::to_string(scene.getFogDensity()));
-        }
-        catch (...) { addLine("[ERROR] Usage: fog density 0.0001..0.1"); }
     }
     else if (first == "time")
     {
@@ -626,10 +633,11 @@ void DeveloperConsole::handleEvent(
         case SDLK_BACKSPACE:
             if (!input.empty())
             {
-                input.pop_back();
-                while (!input.empty() &&
-                       (static_cast<unsigned char>(input.back()) & 0xC0) == 0x80)
-                    input.pop_back();
+                std::size_t start = input.size() - 1;
+                while (start > 0 &&
+                       (static_cast<unsigned char>(input[start]) & 0xC0) == 0x80)
+                    --start;
+                input.erase(start);
             }
             break;
 
