@@ -119,29 +119,32 @@ void Camera::processMovement(
     constexpr float gravity = 18.0f;
     constexpr float jumpVelocity = 6.2f;
 
+    const float targetHeight =
+        vertical < -0.5f ? crouchingHeight : standingHeight;
+
     if (vertical > 0.5f && grounded)
     {
         verticalVelocity = jumpVelocity;
         grounded = false;
     }
 
-    verticalVelocity -= gravity * dt;
-    position.y += verticalVelocity * dt;
-
-    const float targetHeight =
-        grounded && vertical < -0.5f
-            ? crouchingHeight
-            : standingHeight;
-
-    if (position.y <= targetHeight)
+    if (grounded)
     {
+        // Keep grounded movement stable and make crouching independent of gravity.
         position.y = targetHeight;
         verticalVelocity = 0.0f;
-        grounded = true;
     }
     else
     {
-        grounded = false;
+        verticalVelocity -= gravity * dt;
+        position.y += verticalVelocity * dt;
+
+        if (position.y <= targetHeight)
+        {
+            position.y = targetHeight;
+            verticalVelocity = 0.0f;
+            grounded = true;
+        }
     }
 }
 
@@ -190,6 +193,8 @@ void Camera::setFieldOfView(float degrees)
 void Camera::setPosition(const glm::vec3& value)
 {
     position = value;
+    verticalVelocity = 0.0f;
+    grounded = false;
 }
 
 void Camera::reset()
@@ -199,5 +204,8 @@ void Camera::reset()
     pitch = 0.0f;
     movementSpeed = 5.0f;
     fieldOfView = 70.0f;
+    mode = Mode::Flight;
+    verticalVelocity = 0.0f;
+    grounded = false;
 }
 
