@@ -6,7 +6,17 @@
 class Camera
 {
 public:
+    enum class Mode
+    {
+        Flight,
+        Walk
+    };
+
     Camera();
+
+    void setMode(Mode value);
+    Mode getMode() const;
+    const char* getModeName() const;
 
     void processKeyboard(const bool* keys, float deltaTime);
     void processMovement(float forward, float strafe, float vertical,
@@ -29,6 +39,9 @@ private:
     float movementSpeed;
     float mouseSensitivity;
     float fieldOfView;
+    Mode mode = Mode::Flight;
+    float verticalVelocity = 0.0f;
+    bool grounded = false;
 
     glm::vec3 getFront() const;
 };
