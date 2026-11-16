@@ -3,9 +3,10 @@
 #include "../Renderer/IRenderer.h"
 #include "../Renderer/OpenGL/OpenGLRenderer.h"
 #include "../World/Scene.h"
+#if !defined(__ANDROID__)
 #include "../Console/DeveloperConsole.h"
-
-#include <epoxy/gl.h>
+#endif
+#include "../Renderer/GL.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,6 +62,7 @@ bool Application::initialize()
         return false;
     }
 
+#if !defined(__ANDROID__)
     console = std::make_unique<DeveloperConsole>();
 
     if (!console->isValid())
@@ -69,8 +71,10 @@ bool Application::initialize()
             << "Developer console initialization failed. "
             << "The application will continue without the console.\n";
     }
-
     mouseCaptured = true;
+#else
+    mouseCaptured = false;
+#endif
     window.setMouseCaptured(mouseCaptured);
 
     time.initialize();
@@ -114,6 +118,7 @@ void Application::processEvents()
 
         input.handleEvent(event, window.getWidth(), window.getHeight());
 
+#if !defined(__ANDROID__)
         const bool consoleAvailable =
             console && console->isValid();
 
@@ -154,6 +159,8 @@ void Application::processEvents()
             continue;
         }
 
+#endif
+
         if (event.type == SDL_EVENT_KEY_DOWN &&
             !event.key.repeat &&
             event.key.key == SDLK_ESCAPE)
@@ -174,16 +181,21 @@ void Application::processEvents()
 
 void Application::update()
 {
-    const bool consoleOpen =
-        console && console->isValid() && console->isOpen();
-
-    input.update(camera, time.getDeltaTime(), !consoleOpen);
-
-    const bool timePaused =
-        console && console->isValid() && console->isTimePaused();
-
-    const float timeScale =
-        console && console->isValid() ? console->getTimeScale() : 1.0f;
+#if !defined(__ANDROID__)
+    const bool consoleOpen = console && console->isValid() && console->isOpen();
+    const bool timePaused = console && console->isValid() && console->isTimePaused();
+    const float timeScale = console && console->isValid() ? console->getTimeScale() : 1.0f;
+#else
+    constexpr bool timePaused = false;
+    constexpr float timeScale = 1.0f;
+#endif
+    input.update(camera, time.getDeltaTime(),
+#if !defined(__ANDROID__)
+        !consoleOpen
+#else
+        true
+#endif
+    );
 
     if (!timePaused)
         scene->update(time.getDeltaTime() * timeScale);
@@ -212,15 +224,12 @@ void Application::render()
 
     scene->render(camera.getViewMatrix(), projection);
 
+#if !defined(__ANDROID__)
     if (console && console->isValid())
     {
-        console->render(
-            width,
-            height,
-            *scene,
-            static_cast<float>(time.getFPS())
-        );
+        console->render(width, height, *scene, static_cast<float>(time.getFPS()));
     }
+#endif
 
     window.swapBuffers();
 
@@ -242,7 +251,9 @@ void Application::shutdown()
     running = false;
 
     // GL-backed resources must be destroyed before the GL context.
+#if !defined(__ANDROID__)
     console.reset();
+#endif
     scene.reset();
 
     if (renderer)
