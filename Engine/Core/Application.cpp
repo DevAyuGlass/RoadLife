@@ -163,7 +163,7 @@ void Application::processEvents()
 
         if (event.type == SDL_EVENT_KEY_DOWN &&
             !event.key.repeat &&
-            event.key.key == SDLK_v)
+            event.key.key == SDLK_V)
         {
             const Camera::Mode nextMode =
                 camera.getMode() == Camera::Mode::Flight
