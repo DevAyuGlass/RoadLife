@@ -839,7 +839,8 @@ void Scene::renderObjects(
     shader->setVec3("uAmbientColor", ambientColor);
     shader->setVec3("uLightColor", lightColor);
     shader->setBool("uFogEnabled", fogEnabled);
-    shader->setBool("uShadowsEnabled", shadowsEnabled);
+    // Avoid sampling a stale shadow map while the sun is below the horizon.
+    shader->setBool("uShadowsEnabled", shadowsEnabled && sunHeight > 0.0f);
     shader->setFloat("uFogDensity", fogDensity);
     shader->setVec3("uFogColor", skyHorizonColor);
 
