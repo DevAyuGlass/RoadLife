@@ -1,7 +1,6 @@
-
 cmake_minimum_required(VERSION 3.25)
 
-project(RoadLife VERSION 0.1.0 LANGUAGES CXX)
+project(RoadLife VERSION 0.4.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,6 +16,9 @@ pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 
 add_executable(RoadLife
     Engine/Core/main.cpp
+    Engine/Core/Application.cpp
+    Engine/Core/Time.cpp
+    Engine/Platform/Window/Window.cpp
     Engine/Camera/Camera.cpp
     Engine/Renderer/Shader.cpp
     Engine/Renderer/Mesh.cpp
@@ -24,6 +26,8 @@ add_executable(RoadLife
     Engine/World/Scene.cpp
     Engine/Console/DeveloperConsole.cpp
 )
+
+target_include_directories(RoadLife PRIVATE Engine)
 
 target_link_libraries(RoadLife PRIVATE
     SDL3::SDL3
@@ -33,7 +37,8 @@ target_link_libraries(RoadLife PRIVATE
     PkgConfig::EPOXY
 )
 
-target_compile_options(RoadLife PRIVATE
-    -Wall -Wextra -Wpedantic
-)
-
+if(MSVC)
+    target_compile_options(RoadLife PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(RoadLife PRIVATE -Wall -Wextra -Wpedantic)
+endif()
