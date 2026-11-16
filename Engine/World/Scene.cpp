@@ -615,8 +615,10 @@ void Scene::renderSky(
 
     glm::mat4 inverseProjection = glm::inverse(projection);
 
+    // Camera view rotation is orthonormal; transpose is its inverse.
+    // This avoids a full 4x4 matrix inversion every frame.
     glm::mat4 inverseViewRotation(
-        glm::mat3(glm::inverse(view))
+        glm::transpose(glm::mat3(view))
     );
 
     skyShader->setMat4(
