@@ -249,6 +249,8 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  objects              - show scene object count");
         addLine("  spawn cube x y z [s] - spawn a cube (default size 1)");
         addLine("  objects clear        - remove all scene cubes");
+        addLine("  status               - show current engine/world status");
+        addLine("  time dawn|noon|sunset|midnight - quick time presets");
     }
     else if (first == "clear")
     {
@@ -393,6 +395,22 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         }
         else addLine("[WARNING] Usage: camera [speed|reset|teleport]");
     }
+    else if (first == "status")
+    {
+        const glm::vec3 p = camera.getPosition();
+        std::ostringstream result;
+        result << std::fixed << std::setprecision(1)
+               << "[STATUS] FPS " << fps
+               << " | time " << formatTime(scene.getTimeOfDay())
+               << " | objects " << scene.getObjectCount()
+               << " | camera " << std::setprecision(2)
+               << p.x << "," << p.y << "," << p.z;
+        addLine(result.str());
+        addLine(std::string("[STATUS] Shadows ") + (scene.areShadowsEnabled() ? "ON" : "OFF") +
+                " | fog " + (scene.isFogEnabled() ? "ON" : "OFF") +
+                " | grid " + (scene.isGridEnabled() ? "ON" : "OFF") +
+                " | wireframe " + (scene.isWireframe() ? "ON" : "OFF"));
+    }
     else if (first == "objects")
     {
         if (second == "clear")
@@ -424,8 +442,10 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
                     !std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z) || !std::isfinite(scale) ||
                     std::abs(x) > 10000.0f || std::abs(y) > 10000.0f || std::abs(z) > 10000.0f || scale < 0.1f || scale > 20.0f)
                     throw std::out_of_range("Invalid cube parameters");
-                scene.spawnCube(glm::vec3(x, y, z), scale);
-                addLine("[SUCCESS] Cube spawned. Total: " + std::to_string(scene.getObjectCount()));
+                if (scene.spawnCube(glm::vec3(x, y, z), scale))
+                    addLine("[SUCCESS] Cube spawned. Total: " + std::to_string(scene.getObjectCount()));
+                else
+                    addLine("[WARNING] Object limit reached (2000). Use 'objects clear'.");
             }
             catch (...) { addLine("[ERROR] Usage: spawn cube x y z [scale]"); }
         }
@@ -555,6 +575,17 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
             timePaused = false;
             addLine("[SUCCESS] Game clock resumed.");
         }
+        else if (second == "dawn" || second == "sunrise" ||
+                 second == "noon" || second == "sunset" ||
+                 second == "dusk" || second == "midnight")
+        {
+            float preset = 6.0f;
+            if (second == "noon") preset = 12.0f;
+            else if (second == "sunset" || second == "dusk") preset = 18.0f;
+            else if (second == "midnight") preset = 0.0f;
+            scene.setTimeOfDay(preset);
+            addLine("[SUCCESS] Time preset: " + second + " (" + formatTime(preset) + ").");
+        }
         else
         {
             addLine("[ERROR] Unknown time command. Type 'help'.");
@@ -580,7 +611,9 @@ void DeveloperConsole::autocomplete()
         "time pause", "time resume", "wireframe", "wireframe on", "wireframe off",
         "fog", "fog density",
         "shadows", "grid", "camera", "camera speed", "camera reset",
-        "camera teleport", "objects", "objects clear", "spawn cube"
+        "camera teleport", "objects", "objects clear", "spawn cube",
+        "status", "time dawn", "time sunrise", "time noon",
+        "time sunset", "time dusk", "time midnight"
     };
 
     std::vector<std::string> matches;
