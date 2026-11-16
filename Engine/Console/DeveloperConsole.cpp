@@ -252,6 +252,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  grid [on|off]        - toggle ground grid");
         addLine("  camera               - show camera position and speed");
         addLine("  camera speed 10      - set movement speed (0.1..100)");
+        addLine("  camera fov 90        - set field of view (30..110 degrees)");
         addLine("  SHIFT                - sprint while flying around");
         addLine("  camera reset         - reset camera position and rotation");
         addLine("  camera teleport x y z - move camera to coordinates");
@@ -399,7 +400,8 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
             std::ostringstream result;
             result << std::fixed << std::setprecision(2)
                    << "[INFO] Position: " << p.x << ", " << p.y << ", " << p.z
-                   << " | Speed: " << camera.getMovementSpeed();
+                   << " | Speed: " << camera.getMovementSpeed()
+                   << " | FOV: " << camera.getFieldOfView();
             addLine(result.str());
         }
         else if (second == "speed")
@@ -414,6 +416,24 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
                 addLine("[SUCCESS] Camera speed set to " + std::to_string(camera.getMovementSpeed()));
             }
             catch (...) { addLine("[ERROR] Usage: camera speed 0.1..100"); }
+        }
+        else if (second == "fov")
+        {
+            try
+            {
+                std::size_t parsed = 0;
+                const float value = std::stof(third, &parsed);
+                if (parsed != third.size() || !std::isfinite(value) ||
+                    value < 30.0f || value > 110.0f)
+                    throw std::out_of_range("Invalid field of view");
+                camera.setFieldOfView(value);
+                addLine("[SUCCESS] Camera FOV set to " +
+                        std::to_string(camera.getFieldOfView()) + " degrees.");
+            }
+            catch (...)
+            {
+                addLine("[ERROR] Usage: camera fov 30..110");
+            }
         }
         else if (second == "reset")
         {
@@ -655,7 +675,7 @@ void DeveloperConsole::autocomplete()
         "help", "clear", "fps", "time", "time set", "time scale",
         "time pause", "time resume", "wireframe", "wireframe on", "wireframe off",
         "fog", "fog density",
-        "shadows", "grid", "camera", "camera speed", "camera reset",
+        "shadows", "grid", "camera", "camera speed", "camera fov", "camera reset",
         "camera teleport", "objects", "objects clear", "spawn cube",
         "status", "history", "echo", "version", "scroll top", "scroll bottom",
         "time dawn", "time sunrise", "time noon",
