@@ -12,7 +12,6 @@
 // ============================================================
 
 static const char* vertexShader = R"(
-#version 420 core
 
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
@@ -48,7 +47,6 @@ void main()
 // ============================================================
 
 static const char* fragmentShader = R"(
-#version 420 core
 
 in vec3 vWorldPosition;
 in vec3 vNormal;
@@ -170,7 +168,6 @@ void main()
 // ============================================================
 
 static const char* depthVertexShader = R"(
-#version 420 core
 
 layout(location = 0) in vec3 aPosition;
 
@@ -186,7 +183,6 @@ void main()
 )";
 
 static const char* depthFragmentShader = R"(
-#version 420 core
 
 void main()
 {
@@ -198,7 +194,6 @@ void main()
 // ============================================================
 
 static const char* skyVertexShader = R"(
-#version 420 core
 
 out vec2 vUV;
 
@@ -220,7 +215,6 @@ void main()
 )";
 
 static const char* skyFragmentShader = R"(
-#version 420 core
 
 in vec2 vUV;
 
@@ -926,8 +920,12 @@ void Scene::render(
     if (shadowsEnabled && sunHeight > 0.0f)
         renderDepthPass();
 
+#if !defined(__ANDROID__)
     glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+#endif
     renderObjects(view, projection);
+#if !defined(__ANDROID__)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+#endif
 }
 
