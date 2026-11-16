@@ -7,7 +7,13 @@
 
 InputManager::~InputManager()
 {
+    shutdown();
+}
+
+void InputManager::shutdown()
+{
     closeGamepad();
+    reset();
 }
 
 void InputManager::openGamepad(SDL_JoystickID deviceIndex)
@@ -49,6 +55,12 @@ void InputManager::handleEvent(
 {
     viewportWidth = std::max(1, width);
     viewportHeight = std::max(1, height);
+
+    if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST)
+    {
+        reset();
+        return;
+    }
 
     if (event.type == SDL_EVENT_GAMEPAD_ADDED)
     {
@@ -197,8 +209,8 @@ void InputManager::update(
     }
 
     // Touch controls: left-side virtual stick, right-side camera drag.
-    strafe += moveX;
-    forward -= moveY;
+    strafe += applyDeadzone(moveX, 0.10f);
+    forward -= applyDeadzone(moveY, 0.10f);
 
     camera.processMouse(lookDeltaX, lookDeltaY);
     lookDeltaX = 0.0f;
