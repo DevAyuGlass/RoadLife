@@ -29,6 +29,29 @@ glm::vec3 Camera::getFront() const
     return glm::normalize(direction);
 }
 
+void Camera::setMode(Mode value)
+{
+    if (mode == value)
+        return;
+
+    mode = value;
+    verticalVelocity = 0.0f;
+    grounded = false;
+
+    if (mode == Mode::Walk)
+        position.y = 0.63f;
+}
+
+Camera::Mode Camera::getMode() const
+{
+    return mode;
+}
+
+const char* Camera::getModeName() const
+{
+    return mode == Mode::Walk ? "WALK" : "FLIGHT";
+}
+
 void Camera::processKeyboard(const bool* keys, float deltaTime)
 {
     const float forward =
@@ -54,22 +77,71 @@ void Camera::processMovement(
     float deltaTime
 )
 {
+    const float dt = glm::clamp(deltaTime, 0.0f, 0.05f);
+    const glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
     const glm::vec3 front = getFront();
-    const glm::vec3 right = glm::normalize(
-        glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f))
+
+    if (mode == Mode::Flight)
+    {
+        const glm::vec3 right = glm::normalize(glm::cross(front, worldUp));
+        glm::vec3 movement =
+            front * forward +
+            right * strafe +
+            worldUp * vertical;
+
+        const float movementLength = glm::length(movement);
+        if (movementLength > 0.0f)
+        {
+            const float sprintMultiplier = sprint ? 3.0f : 1.0f;
+            position += (movement / movementLength) *
+                        movementSpeed * sprintMultiplier * dt;
+        }
+        return;
+    }
+
+    // Walk mode: horizontal movement, gravity, jumping and crouching.
+    const glm::vec3 flatFront = glm::normalize(
+        glm::vec3(front.x, 0.0f, front.z)
     );
-
-    glm::vec3 movement =
-        front * forward +
-        right * strafe +
-        glm::vec3(0.0f, vertical, 0.0f);
-
+    const glm::vec3 right = glm::normalize(glm::cross(flatFront, worldUp));
+    glm::vec3 movement = flatFront * forward + right * strafe;
     const float movementLength = glm::length(movement);
+
     if (movementLength > 0.0f)
     {
-        const float sprintMultiplier = sprint ? 3.0f : 1.0f;
+        const float sprintMultiplier = sprint ? 1.8f : 1.0f;
         position += (movement / movementLength) *
-                    movementSpeed * sprintMultiplier * deltaTime;
+                    movementSpeed * sprintMultiplier * dt;
+    }
+
+    constexpr float standingHeight = 0.63f;
+    constexpr float crouchingHeight = 0.12f;
+    constexpr float gravity = 18.0f;
+    constexpr float jumpVelocity = 6.2f;
+
+    if (vertical > 0.5f && grounded)
+    {
+        verticalVelocity = jumpVelocity;
+        grounded = false;
+    }
+
+    verticalVelocity -= gravity * dt;
+    position.y += verticalVelocity * dt;
+
+    const float targetHeight =
+        grounded && vertical < -0.5f
+            ? crouchingHeight
+            : standingHeight;
+
+    if (position.y <= targetHeight)
+    {
+        position.y = targetHeight;
+        verticalVelocity = 0.0f;
+        grounded = true;
+    }
+    else
+    {
+        grounded = false;
     }
 }
 
