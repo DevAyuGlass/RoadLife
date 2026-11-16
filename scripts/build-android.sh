@@ -49,16 +49,13 @@ if [[ ! -f "$SDL_AAR" ]]; then
     unzip -p "$ARCHIVE" "$AAR_ENTRY" > "$SDL_AAR"
 fi
 
-GRADLE_BIN="$(command -v gradle || true)"
-if [[ -z "$GRADLE_BIN" ]]; then
-    GRADLE_HOME="$CACHE_DIR/gradle-$GRADLE_VERSION"
-    GRADLE_BIN="$GRADLE_HOME/bin/gradle"
-    if [[ ! -x "$GRADLE_BIN" ]]; then
-        DIST="$CACHE_DIR/gradle-$GRADLE_VERSION-bin.zip"
-        echo "Downloading Gradle $GRADLE_VERSION..."
-        curl -fL --retry 3 "https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip" -o "$DIST"
-        unzip -q "$DIST" -d "$CACHE_DIR"
-    fi
+GRADLE_HOME="$CACHE_DIR/gradle-$GRADLE_VERSION"
+GRADLE_BIN="$GRADLE_HOME/bin/gradle"
+if [[ ! -x "$GRADLE_BIN" ]]; then
+    DIST="$CACHE_DIR/gradle-$GRADLE_VERSION-bin.zip"
+    echo "Downloading Gradle $GRADLE_VERSION..."
+    curl -fL --retry 3 "https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip" -o "$DIST"
+    unzip -q "$DIST" -d "$CACHE_DIR"
 fi
 
 echo "Building RoadLife Android APK (arm64-v8a)..."
