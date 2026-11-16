@@ -318,6 +318,8 @@ static float smoothStep(
 
 Scene::Scene()
 {
+    objects.reserve(256);
+
     shader = std::make_unique<Shader>(
         vertexShader,
         fragmentShader
@@ -470,8 +472,12 @@ std::size_t Scene::getObjectCount() const
     return objects.size();
 }
 
-void Scene::spawnCube(const glm::vec3& position, float scale)
+bool Scene::spawnCube(const glm::vec3& position, float scale)
 {
+    constexpr std::size_t maxObjects = 2000;
+    if (objects.size() >= maxObjects)
+        return false;
+
     static const std::array<glm::vec3, 6> palette = {{
         {0.85f, 0.25f, 0.20f}, {0.20f, 0.55f, 0.95f},
         {0.25f, 0.80f, 0.40f}, {0.95f, 0.75f, 0.20f},
@@ -480,6 +486,7 @@ void Scene::spawnCube(const glm::vec3& position, float scale)
     const glm::vec3 color = palette[objects.size() % palette.size()];
     const float safeScale = glm::clamp(scale, 0.1f, 20.0f);
     objects.push_back({position, glm::vec3(safeScale), color, glm::vec3(0.8f)});
+    return true;
 }
 
 void Scene::clearObjects()
