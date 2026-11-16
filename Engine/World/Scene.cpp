@@ -66,6 +66,7 @@ uniform vec3 uLightColor;
 uniform bool uUseLighting;
 uniform sampler2D uShadowMap;
 uniform bool uFogEnabled;
+uniform bool uShadowsEnabled;
 uniform float uFogDensity;
 uniform vec3 uFogColor;
 
@@ -145,7 +146,9 @@ void main()
     vec3 specular =
         specularStrength * uSpecularColor * uLightColor * 0.4;
 
-    float shadow = calculateShadow(normal, lightDir);
+    float shadow = uShadowsEnabled
+        ? calculateShadow(normal, lightDir)
+        : 0.0;
 
     vec3 result = ambient +
         (1.0 - shadow) * (diffuse + specular);
@@ -429,6 +432,59 @@ void Scene::setFogEnabled(bool enabled)
 bool Scene::isFogEnabled() const
 {
     return fogEnabled;
+}
+
+void Scene::setFogDensity(float density)
+{
+    if (std::isfinite(density))
+        fogDensity = glm::clamp(density, 0.0001f, 0.1f);
+}
+
+float Scene::getFogDensity() const
+{
+    return fogDensity;
+}
+
+void Scene::setShadowsEnabled(bool enabled)
+{
+    shadowsEnabled = enabled;
+}
+
+bool Scene::areShadowsEnabled() const
+{
+    return shadowsEnabled;
+}
+
+void Scene::setGridEnabled(bool enabled)
+{
+    gridEnabled = enabled;
+}
+
+bool Scene::isGridEnabled() const
+{
+    return gridEnabled;
+}
+
+std::size_t Scene::getObjectCount() const
+{
+    return objects.size();
+}
+
+void Scene::spawnCube(const glm::vec3& position, float scale)
+{
+    static const std::array<glm::vec3, 6> palette = {{
+        {0.85f, 0.25f, 0.20f}, {0.20f, 0.55f, 0.95f},
+        {0.25f, 0.80f, 0.40f}, {0.95f, 0.75f, 0.20f},
+        {0.70f, 0.30f, 0.90f}, {0.20f, 0.80f, 0.80f}
+    }};
+    const glm::vec3 color = palette[objects.size() % palette.size()];
+    const float safeScale = glm::clamp(scale, 0.1f, 20.0f);
+    objects.push_back({position, glm::vec3(safeScale), color, glm::vec3(0.8f)});
+}
+
+void Scene::clearObjects()
+{
+    objects.clear();
 }
 
 void Scene::update(float deltaTime)
@@ -783,6 +839,7 @@ void Scene::renderObjects(
     shader->setVec3("uAmbientColor", ambientColor);
     shader->setVec3("uLightColor", lightColor);
     shader->setBool("uFogEnabled", fogEnabled);
+    shader->setBool("uShadowsEnabled", shadowsEnabled);
     shader->setFloat("uFogDensity", fogDensity);
     shader->setVec3("uFogColor", skyHorizonColor);
 
@@ -810,8 +867,11 @@ void Scene::renderObjects(
     ground->draw();
 
     // Grid.
-    shader->setBool("uUseLighting", false);
-    grid->draw();
+    if (gridEnabled)
+    {
+        shader->setBool("uUseLighting", false);
+        grid->draw();
+    }
 
     // Cubes.
     shader->setBool("uUseLighting", true);
@@ -847,7 +907,7 @@ void Scene::render(
     renderSky(view, projection);
 
     // Keep the shadow map solid even when the visible scene is wireframe.
-    if (sunHeight > 0.0f)
+    if (shadowsEnabled && sunHeight > 0.0f)
         renderDepthPass();
 
     glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
