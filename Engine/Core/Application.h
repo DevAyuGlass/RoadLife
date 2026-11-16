@@ -32,7 +32,9 @@ private:
 
     std::unique_ptr<IRenderer> renderer;
     std::unique_ptr<Scene> scene;
+#if !defined(__ANDROID__)
     std::unique_ptr<DeveloperConsole> console;
+#endif
 
     bool running = false;
     bool mouseCaptured = true;
