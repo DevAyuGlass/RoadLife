@@ -36,7 +36,7 @@ public:
     void setGridEnabled(bool enabled);
     bool isGridEnabled() const;
     std::size_t getObjectCount() const;
-    void spawnCube(const glm::vec3& position, float scale);
+    bool spawnCube(const glm::vec3& position, float scale);
     void clearObjects();
 
     void render(
