@@ -8,12 +8,39 @@ The project is currently in an early engine-development stage. The existing rend
 
 - SDL3 application and window layer
 - C++20 codebase with CMake
-- Free-fly developer camera
+- Free-fly developer camera with normalized movement, sprint and runtime speed/teleport controls
 - OpenGL renderer with shader and mesh abstractions
-- Shadow mapping
-- Procedural sky, sun and day/night cycle
-- Developer console with command history and runtime controls
-- Basic scene and object rendering
+- Shadow mapping with runtime enable/disable and night-time sampling bypass
+- Procedural sky, sun and day/night cycle with quick time presets
+- Distance fog with runtime density controls
+- Toggleable ground grid and wireframe rendering
+- Runtime cube spawning/removal (up to 2,000 scene objects)
+- Developer console with command history, autocomplete, status output and runtime controls
+- Cached shader uniform locations and CPU-side normal-matrix calculation to reduce per-frame/per-vertex overhead
+
+## Developer console
+
+Open the console with **F1** or **~**. Useful commands:
+
+```text
+help
+status
+camera
+camera speed 12
+camera teleport 0 3 8
+camera reset
+wireframe on
+fog density 0.02
+shadows off
+grid off
+spawn cube 5 0 -4 1.5
+objects
+objects clear
+time noon
+time sunset
+```
+
+Hold **Shift** while flying to move faster. Use **Esc** to release or recapture the mouse.
 
 ## Build on Arch Linux
 
