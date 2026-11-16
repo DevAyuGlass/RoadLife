@@ -34,27 +34,8 @@ ShadowMap::ShadowMap(int resolution)
         GL_NEAREST
     );
 
-    glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_BORDER
-    );
-
-    glTexParameteri(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_BORDER
-    );
-
-    const float borderColor[] = {
-        1.0f, 1.0f, 1.0f, 1.0f
-    };
-
-    glTexParameterfv(
-        GL_TEXTURE_2D,
-        GL_TEXTURE_BORDER_COLOR,
-        borderColor
-    );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
@@ -66,7 +47,8 @@ ShadowMap::ShadowMap(int resolution)
         0
     );
 
-    glDrawBuffer(GL_NONE);
+    const GLenum noColorBuffers[] = { GL_NONE };
+    glDrawBuffers(1, noColorBuffers);
     glReadBuffer(GL_NONE);
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
