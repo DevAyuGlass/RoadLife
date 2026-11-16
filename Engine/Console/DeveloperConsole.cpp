@@ -250,6 +250,9 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  fog density 0.01     - set fog density (0.0001..0.1)");
         addLine("  shadows [on|off]     - toggle shadow mapping");
         addLine("  grid [on|off]        - toggle ground grid");
+        addLine("  mode walk|flight     - switch between grounded and free-fly movement");
+        addLine("  V                    - switch movement mode");
+        addLine("  WALK: WASD move, SPACE jump, CTRL crouch, SHIFT sprint");
         addLine("  camera               - show camera position and speed");
         addLine("  camera speed 10      - set movement speed (0.1..100)");
         addLine("  camera fov 90        - set field of view (30..110 degrees)");
@@ -392,6 +395,27 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         }
         else addLine("[WARNING] Usage: grid [on|off]");
     }
+    else if (first == "mode")
+    {
+        if (second == "walk")
+        {
+            camera.setMode(Camera::Mode::Walk);
+            addLine("[SUCCESS] Walking mode enabled. WASD move, SPACE jump, CTRL crouch.");
+        }
+        else if (second == "flight")
+        {
+            camera.setMode(Camera::Mode::Flight);
+            addLine("[SUCCESS] Free-fly mode enabled.");
+        }
+        else if (second.empty())
+        {
+            addLine(std::string("[INFO] Movement mode: ") + camera.getModeName());
+        }
+        else
+        {
+            addLine("[WARNING] Usage: mode [walk|flight]");
+        }
+    }
     else if (first == "camera")
     {
         if (second.empty())
@@ -401,7 +425,8 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
             result << std::fixed << std::setprecision(2)
                    << "[INFO] Position: " << p.x << ", " << p.y << ", " << p.z
                    << " | Speed: " << camera.getMovementSpeed()
-                   << " | FOV: " << camera.getFieldOfView();
+                   << " | FOV: " << camera.getFieldOfView()
+                   << " | Mode: " << camera.getModeName();
             addLine(result.str());
         }
         else if (second == "speed")
@@ -468,6 +493,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
                << "[STATUS] FPS " << fps
                << " | time " << formatTime(scene.getTimeOfDay())
                << " | objects " << scene.getObjectCount()
+               << " | mode " << camera.getModeName()
                << " | camera " << std::setprecision(2)
                << p.x << "," << p.y << "," << p.z;
         addLine(result.str());
@@ -677,6 +703,7 @@ void DeveloperConsole::autocomplete()
         "fog", "fog density",
         "shadows", "grid", "camera", "camera speed", "camera fov", "camera reset",
         "camera teleport", "objects", "objects clear", "spawn cube",
+        "mode", "mode walk", "mode flight",
         "status", "history", "echo", "version", "scroll top", "scroll bottom",
         "time dawn", "time sunrise", "time noon",
         "time sunset", "time dusk", "time midnight"
