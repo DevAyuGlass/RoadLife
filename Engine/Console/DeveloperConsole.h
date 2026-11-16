@@ -58,6 +58,8 @@ private:
     std::vector<std::string> history;
 
     int historyPosition = 0;
+    int outputScrollOffset = 0;
+    std::vector<float> fpsSamples;
 
     void addLine(const std::string& text);
     void executeCommand(Scene& scene, Camera& camera, float fps);
@@ -83,9 +85,9 @@ private:
         SDL_Color color
     );
 
-    void renderConsoleTab(SDL_Surface* surface, int x, int y, int height);
+    void renderConsoleTab(SDL_Surface* surface, int x, int y, int width, int height);
     void renderLogsTab(SDL_Surface* surface, int x, int y, int width, int height);
-    void renderPerformanceTab(SDL_Surface* surface, int x, int y, float fps);
+    void renderPerformanceTab(SDL_Surface* surface, int x, int y, int width, float fps);
     void renderWorldTab(SDL_Surface* surface, int x, int y, const Scene& scene);
 
     static std::string formatTime(float hours);
