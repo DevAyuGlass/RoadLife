@@ -36,25 +36,25 @@ void Camera::processKeyboard(const bool* keys, float deltaTime)
         glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f))
     );
 
-    float velocity = movementSpeed * deltaTime;
+    glm::vec3 movement(0.0f);
 
-    if (keys[SDL_SCANCODE_W])
-        position += front * velocity;
+    if (keys[SDL_SCANCODE_W]) movement += front;
+    if (keys[SDL_SCANCODE_S]) movement -= front;
+    if (keys[SDL_SCANCODE_D]) movement += right;
+    if (keys[SDL_SCANCODE_A]) movement -= right;
+    if (keys[SDL_SCANCODE_SPACE]) movement.y += 1.0f;
+    if (keys[SDL_SCANCODE_LCTRL]) movement.y -= 1.0f;
 
-    if (keys[SDL_SCANCODE_S])
-        position -= front * velocity;
-
-    if (keys[SDL_SCANCODE_A])
-        position -= right * velocity;
-
-    if (keys[SDL_SCANCODE_D])
-        position += right * velocity;
-
-    if (keys[SDL_SCANCODE_SPACE])
-        position.y += velocity;
-
-    if (keys[SDL_SCANCODE_LCTRL])
-        position.y -= velocity;
+    // Normalize input so diagonal movement is not faster.
+    const float movementLength = glm::length(movement);
+    if (movementLength > 0.0f)
+    {
+        const float sprintMultiplier =
+            (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT])
+                ? 3.0f : 1.0f;
+        position += (movement / movementLength) *
+                    movementSpeed * sprintMultiplier * deltaTime;
+    }
 }
 
 void Camera::processMouse(float xOffset, float yOffset)
