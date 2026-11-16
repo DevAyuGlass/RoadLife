@@ -189,6 +189,14 @@ void Application::processEvents()
                 static_cast<float>(event.motion.yrel)
             );
         }
+
+        if (event.type == SDL_EVENT_MOUSE_WHEEL && mouseCaptured)
+        {
+            camera.setFieldOfView(
+                camera.getFieldOfView() -
+                static_cast<float>(event.wheel.y) * 2.0f
+            );
+        }
     }
 }
 
