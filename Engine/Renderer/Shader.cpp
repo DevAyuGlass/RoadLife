@@ -9,9 +9,9 @@ GLuint Shader::compile(GLenum type, const char* source)
 {
     GLuint shader = glCreateShader(type);
 #if defined(__ANDROID__)
-    const std::string shaderText = std::string("#version 300 es\\nprecision highp float;\\n") + source;
+    const std::string shaderText = std::string("#version 300 es\nprecision highp float;\n") + source;
 #else
-    const std::string shaderText = std::string("#version 420 core\\n") + source;
+    const std::string shaderText = std::string("#version 420 core\n") + source;
 #endif
     const char* shaderSource = shaderText.c_str();
     glShaderSource(shader, 1, &shaderSource, nullptr);
