@@ -65,6 +65,9 @@ uniform vec3 uLightColor;
 
 uniform bool uUseLighting;
 uniform sampler2D uShadowMap;
+uniform bool uFogEnabled;
+uniform float uFogDensity;
+uniform vec3 uFogColor;
 
 out vec4 FragColor;
 
@@ -146,6 +149,13 @@ void main()
 
     vec3 result = ambient +
         (1.0 - shadow) * (diffuse + specular);
+
+    if (uFogEnabled)
+    {
+        float distanceToCamera = length(uViewPosition - vWorldPosition);
+        float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * distanceToCamera * distanceToCamera);
+        result = mix(result, uFogColor, clamp(fogFactor, 0.0, 1.0));
+    }
 
     FragColor = vec4(result, 1.0);
 }
@@ -399,6 +409,26 @@ void Scene::setTimeOfDay(float hours)
 float Scene::getTimeOfDay() const
 {
     return timeOfDay;
+}
+
+void Scene::setWireframe(bool enabled)
+{
+    wireframe = enabled;
+}
+
+bool Scene::isWireframe() const
+{
+    return wireframe;
+}
+
+void Scene::setFogEnabled(bool enabled)
+{
+    fogEnabled = enabled;
+}
+
+bool Scene::isFogEnabled() const
+{
+    return fogEnabled;
 }
 
 void Scene::update(float deltaTime)
@@ -752,6 +782,9 @@ void Scene::renderObjects(
     shader->setVec3("uLightDirection", lightDirection);
     shader->setVec3("uAmbientColor", ambientColor);
     shader->setVec3("uLightColor", lightColor);
+    shader->setBool("uFogEnabled", fogEnabled);
+    shader->setFloat("uFogDensity", fogDensity);
+    shader->setVec3("uFogColor", skyHorizonColor);
 
     glm::vec3 cameraPosition = glm::vec3(
         glm::inverse(view)[3]
@@ -813,9 +846,13 @@ void Scene::render(
 {
     renderSky(view, projection);
 
+    glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+
     if (sunHeight > 0.0f)
         renderDepthPass();
 
     renderObjects(view, projection);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
