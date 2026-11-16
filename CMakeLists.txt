@@ -20,6 +20,7 @@ add_executable(RoadLife
     Engine/Core/Time.cpp
     Engine/Platform/Window/Window.cpp
     Engine/Camera/Camera.cpp
+    Engine/Renderer/OpenGL/OpenGLRenderer.cpp
     Engine/Renderer/Shader.cpp
     Engine/Renderer/Mesh.cpp
     Engine/Renderer/ShadowMap.cpp
