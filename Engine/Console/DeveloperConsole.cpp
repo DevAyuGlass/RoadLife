@@ -377,8 +377,8 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         }
         else if (second == "teleport")
         {
-            std::string sx, sy, sz;
-            stream >> sx >> sy >> sz;
+            std::string sx = third, sy, sz;
+            stream >> sy >> sz;
             try
             {
                 std::size_t px = 0, py = 0, pz = 0;
