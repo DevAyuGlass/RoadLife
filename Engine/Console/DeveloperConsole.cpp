@@ -169,8 +169,17 @@ void DeveloperConsole::addLine(const std::string& text)
 
     constexpr std::size_t maxLines = 250;
 
+    if (outputScrollOffset > 0)
+        ++outputScrollOffset;
+
     if (output.size() > maxLines)
+    {
         output.erase(output.begin());
+        outputScrollOffset = std::min(
+            outputScrollOffset,
+            static_cast<int>(output.size()) - 1
+        );
+    }
 }
 
 // ------------------------------------------------------------
@@ -251,11 +260,46 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  objects clear        - remove all scene cubes");
         addLine("  status               - show current engine/world status");
         addLine("  time dawn|noon|sunset|midnight - quick time presets");
+        addLine("  history              - show recent commands");
+        addLine("  echo <text>          - print a message to the console");
+        addLine("  version              - show engine version and graphics API");
+        addLine("  scroll top|bottom    - jump through console output");
     }
     else if (first == "clear")
     {
         output.clear();
         addLine("[SUCCESS] Console output cleared.");
+    }
+    else if (first == "history")
+    {
+        addLine("[INFO] Recent commands:");
+        const std::size_t end = history.size() > 1 ? history.size() - 1 : 0;
+        const std::size_t begin = end > 12 ? end - 12 : 0;
+        if (begin == end)
+            addLine("  (no previous commands)");
+        for (std::size_t i = begin; i < end; ++i)
+            addLine("  " + history[i]);
+    }
+    else if (first == "echo")
+    {
+        const std::size_t separator = command.find(' ');
+        addLine(separator == std::string::npos
+            ? "[INFO] "
+            : command.substr(separator + 1));
+    }
+    else if (first == "version")
+    {
+        addLine("[INFO] RoadLife Engine 0.4 | OpenGL 4.2 Core");
+        addLine("[INFO] SDL3 | C++20 | Developer build");
+    }
+    else if (first == "scroll")
+    {
+        if (second == "top")
+            outputScrollOffset = std::max(0, static_cast<int>(output.size()) - 1);
+        else if (second == "bottom")
+            outputScrollOffset = 0;
+        else
+            addLine("[WARNING] Usage: scroll top|bottom");
     }
     else if (first == "fps")
     {
@@ -661,6 +705,20 @@ void DeveloperConsole::handleEvent(
     if (!opened)
         return;
 
+    if (event.type == SDL_EVENT_MOUSE_WHEEL)
+    {
+        int direction = event.wheel.y > 0.0f ? 1 :
+                        event.wheel.y < 0.0f ? -1 : 0;
+        if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
+            direction = -direction;
+        outputScrollOffset = std::clamp(
+            outputScrollOffset + direction * 3,
+            0,
+            std::max(0, static_cast<int>(output.size()) - 1)
+        );
+        return;
+    }
+
     if (event.type == SDL_EVENT_TEXT_INPUT)
     {
         input += event.text.text;
@@ -711,6 +769,25 @@ void DeveloperConsole::handleEvent(
 
         case SDLK_TAB:
             autocomplete();
+            break;
+
+        case SDLK_PAGEUP:
+            outputScrollOffset = std::min(
+                std::max(0, static_cast<int>(output.size()) - 1),
+                outputScrollOffset + 8
+            );
+            break;
+
+        case SDLK_PAGEDOWN:
+            outputScrollOffset = std::max(0, outputScrollOffset - 8);
+            break;
+
+        case SDLK_HOME:
+            outputScrollOffset = std::max(0, static_cast<int>(output.size()) - 1);
+            break;
+
+        case SDLK_END:
+            outputScrollOffset = 0;
             break;
 
         case SDLK_1:
@@ -941,6 +1018,7 @@ void DeveloperConsole::renderConsoleTab(
     SDL_Surface* surface,
     int x,
     int y,
+    int width,
     int height
 )
 {
@@ -950,16 +1028,16 @@ void DeveloperConsole::renderConsoleTab(
 
     const int lineHeight = 21;
     const int availableLines = std::max(1, (height - 55) / lineHeight);
+    const int totalLines = static_cast<int>(output.size());
+    const int maxOffset = std::max(0, totalLines - availableLines);
+    outputScrollOffset = std::clamp(outputScrollOffset, 0, maxOffset);
 
-    const int firstLine = std::max(
-        0,
-        static_cast<int>(output.size()) - availableLines
-    );
+    const int endLine = std::max(0, totalLines - outputScrollOffset);
+    const int firstLine = std::max(0, endLine - availableLines);
 
-    for (int i = firstLine; i < static_cast<int>(output.size()); ++i)
+    for (int i = firstLine; i < endLine; ++i)
     {
-        const std::string& line = output[i];
-
+        const std::string& line = output[static_cast<std::size_t>(i)];
         SDL_Color color = COLOR_TEXT;
 
         if (line.find("[SUCCESS]") != std::string::npos)
@@ -975,6 +1053,22 @@ void DeveloperConsole::renderConsoleTab(
 
         drawText(surface, line, x, y, color);
         y += lineHeight;
+    }
+
+    if (totalLines > availableLines)
+    {
+        const int trackX = x + width - 5;
+        const int trackY = y - (endLine - firstLine) * lineHeight;
+        const int trackHeight = availableLines * lineHeight;
+        const int thumbHeight = std::max(
+            18, trackHeight * availableLines / totalLines
+        );
+        const int thumbTravel = std::max(0, trackHeight - thumbHeight);
+        const int thumbY = trackY + (maxOffset > 0
+            ? thumbTravel * (maxOffset - outputScrollOffset) / maxOffset
+            : 0);
+        fillRect(surface, trackX, trackY, 3, trackHeight, COLOR_BORDER);
+        fillRect(surface, trackX, thumbY, 3, thumbHeight, COLOR_BLUE);
     }
 }
 // ------------------------------------------------------------
@@ -1002,16 +1096,16 @@ void DeveloperConsole::renderLogsTab(
 
     const int lineHeight = 21;
     const int availableLines = std::max(1, (height - 55) / lineHeight);
+    const int totalLines = static_cast<int>(output.size());
+    const int maxOffset = std::max(0, totalLines - availableLines);
+    outputScrollOffset = std::clamp(outputScrollOffset, 0, maxOffset);
 
-    const int firstLine = std::max(
-        0,
-        static_cast<int>(output.size()) - availableLines
-    );
+    const int endLine = std::max(0, totalLines - outputScrollOffset);
+    const int firstLine = std::max(0, endLine - availableLines);
 
-    for (int i = firstLine; i < static_cast<int>(output.size()); ++i)
+    for (int i = firstLine; i < endLine; ++i)
     {
-        const std::string& line = output[i];
-
+        const std::string& line = output[static_cast<std::size_t>(i)];
         SDL_Color color = COLOR_TEXT;
 
         if (line.find("[SUCCESS]") != std::string::npos)
@@ -1026,6 +1120,22 @@ void DeveloperConsole::renderLogsTab(
         drawText(surface, line, x, y, color);
         y += lineHeight;
     }
+
+    if (totalLines > availableLines)
+    {
+        const int trackX = x + width - 5;
+        const int trackY = y - (endLine - firstLine) * lineHeight;
+        const int trackHeight = availableLines * lineHeight;
+        const int thumbHeight = std::max(
+            18, trackHeight * availableLines / totalLines
+        );
+        const int thumbTravel = std::max(0, trackHeight - thumbHeight);
+        const int thumbY = trackY + (maxOffset > 0
+            ? thumbTravel * (maxOffset - outputScrollOffset) / maxOffset
+            : 0);
+        fillRect(surface, trackX, trackY, 3, trackHeight, COLOR_BORDER);
+        fillRect(surface, trackX, thumbY, 3, thumbHeight, COLOR_BLUE);
+    }
 }
 
 // ------------------------------------------------------------
@@ -1036,6 +1146,7 @@ void DeveloperConsole::renderPerformanceTab(
     SDL_Surface* surface,
     int x,
     int y,
+    int width,
     float fps
 )
 {
@@ -1058,6 +1169,43 @@ void DeveloperConsole::renderPerformanceTab(
     drawText(surface, frameText.str(), x + 250, y + 27, COLOR_GREEN);
 
     y += 100;
+
+    if (!fpsSamples.empty())
+    {
+        const auto [minimum, maximum] = std::minmax_element(
+            fpsSamples.begin(), fpsSamples.end()
+        );
+        float average = 0.0f;
+        for (const float sample : fpsSamples)
+            average += sample;
+        average /= static_cast<float>(fpsSamples.size());
+
+        std::ostringstream metrics;
+        metrics << std::fixed << std::setprecision(1)
+                << "FPS min/avg/max: " << *minimum << " / "
+                << average << " / " << *maximum;
+        drawText(surface, metrics.str(), x, y, COLOR_TEXT);
+
+        const int graphY = y + 28;
+        const int graphHeight = 54;
+        const int graphWidth = std::max(1, std::min(width - 8, 720));
+        fillRect(surface, x, graphY, graphWidth, graphHeight, COLOR_INPUT);
+        const float scale = std::max(1.0f, *maximum);
+        const int sampleCount = static_cast<int>(fpsSamples.size());
+        for (int i = 0; i < sampleCount; ++i)
+        {
+            const int barX = x + i * graphWidth / sampleCount;
+            const int nextX = x + (i + 1) * graphWidth / sampleCount;
+            const int barWidth = std::max(1, nextX - barX - 1);
+            const int barHeight = static_cast<int>(
+                glm::clamp(fpsSamples[static_cast<std::size_t>(i)] / scale,
+                           0.0f, 1.0f) * static_cast<float>(graphHeight - 4)
+            );
+            fillRect(surface, barX, graphY + graphHeight - barHeight - 2,
+                     barWidth, std::max(1, barHeight), COLOR_BLUE);
+        }
+        y += 100;
+    }
 
     drawText(surface, "SIMULATION", x, y, COLOR_MUTED);
     drawText(
@@ -1154,6 +1302,14 @@ void DeveloperConsole::render(
 {
     if (!opened || !valid || width <= 0 || height <= 0)
         return;
+
+    if (fps > 0.0f && std::isfinite(fps))
+    {
+        fpsSamples.push_back(fps);
+        constexpr std::size_t maxSamples = 120;
+        if (fpsSamples.size() > maxSamples)
+            fpsSamples.erase(fpsSamples.begin());
+    }
 
     SDL_Surface* surface = SDL_CreateSurface(
         width,
@@ -1333,6 +1489,7 @@ void DeveloperConsole::render(
             surface,
             contentX,
             contentY,
+            contentWidth,
             contentHeight
         );
         break;
@@ -1352,6 +1509,7 @@ void DeveloperConsole::render(
             surface,
             contentX,
             contentY,
+            contentWidth,
             fps
         );
         break;
@@ -1432,7 +1590,7 @@ void DeveloperConsole::render(
 
     drawText(
         surface,
-        "F1 CLOSE  |  TAB COMPLETE  |  UP/DOWN HISTORY",
+        "F1 CLOSE  |  TAB COMPLETE  |  WHEEL/PAGE SCROLL",
         width - 390,
         height - 20,
         COLOR_MUTED
