@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <epoxy/gl.h>
+#include GL.h
 #include <vector>
 
 class Mesh
