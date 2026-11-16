@@ -1,0 +1,74 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Engine/**'
+      - 'android/**'
+      - 'scripts/build-android.sh'
+      - 'CMakeLists.txt'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build debug APK (arm64-v8a)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;28.2.13676358" \
+            "cmake;3.31.6"
+
+      - name: Cache Android build downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/roadlife-android
+            android/app/libs/SDL3-3.4.16.aar
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: roadlife-android-${{ runner.os }}-${{ hashFiles('android/**/*.gradle', 'android/**/*.gradle.kts', 'scripts/build-android.sh') }}
+          restore-keys: |
+            roadlife-android-${{ runner.os }}-
+
+      - name: Build APK
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+        run: bash scripts/build-android.sh
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoadLife-Android-debug
+          path: build-android/apk/RoadLife-debug.apk
+          if-no-files-found: error
+          retention-days: 14
