@@ -1,6 +1,6 @@
 #include "OpenGLRenderer.h"
 
-#include <epoxy/gl.h>
+#include "../GL.h"
 
 #include <iostream>
 
