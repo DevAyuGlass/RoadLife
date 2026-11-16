@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ANDROID_DIR="$ROOT_DIR/android"
 SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}"
-SDL_VERSION="3.2.16"
-GRADLE_VERSION="8.9"
+SDL_VERSION="3.4.16"
+GRADLE_VERSION="8.13"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/roadlife-android"
 
 if ! command -v java >/dev/null 2>&1; then
