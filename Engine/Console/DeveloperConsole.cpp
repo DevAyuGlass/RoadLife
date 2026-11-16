@@ -268,6 +268,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
     else if (first == "clear")
     {
         output.clear();
+        outputScrollOffset = 0;
         addLine("[SUCCESS] Console output cleared.");
     }
     else if (first == "history")
@@ -656,7 +657,8 @@ void DeveloperConsole::autocomplete()
         "fog", "fog density",
         "shadows", "grid", "camera", "camera speed", "camera reset",
         "camera teleport", "objects", "objects clear", "spawn cube",
-        "status", "time dawn", "time sunrise", "time noon",
+        "status", "history", "echo", "version", "scroll top", "scroll bottom",
+        "time dawn", "time sunrise", "time noon",
         "time sunset", "time dusk", "time midnight"
     };
 
@@ -1168,7 +1170,7 @@ void DeveloperConsole::renderPerformanceTab(
     drawText(surface, "FRAME TIME", x + 250, y, COLOR_MUTED);
     drawText(surface, frameText.str(), x + 250, y + 27, COLOR_GREEN);
 
-    y += 100;
+    y += 70;
 
     if (!fpsSamples.empty())
     {
@@ -1187,7 +1189,7 @@ void DeveloperConsole::renderPerformanceTab(
         drawText(surface, metrics.str(), x, y, COLOR_TEXT);
 
         const int graphY = y + 28;
-        const int graphHeight = 54;
+        const int graphHeight = 42;
         const int graphWidth = std::max(1, std::min(width - 8, 720));
         fillRect(surface, x, graphY, graphWidth, graphHeight, COLOR_INPUT);
         const float scale = std::max(1.0f, *maximum);
@@ -1204,7 +1206,7 @@ void DeveloperConsole::renderPerformanceTab(
             fillRect(surface, barX, graphY + graphHeight - barHeight - 2,
                      barWidth, std::max(1, barHeight), COLOR_BLUE);
         }
-        y += 100;
+        y += 70;
     }
 
     drawText(surface, "SIMULATION", x, y, COLOR_MUTED);
@@ -1224,15 +1226,6 @@ void DeveloperConsole::renderPerformanceTab(
         timePaused ? COLOR_YELLOW : COLOR_GREEN
     );
 
-    y += 80;
-
-    drawText(
-        surface,
-        "Memory and GPU metrics will be added with the profiling system.",
-        x,
-        y,
-        COLOR_MUTED
-    );
 }
 
 // ------------------------------------------------------------
