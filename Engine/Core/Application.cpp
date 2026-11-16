@@ -251,6 +251,8 @@ void Application::shutdown()
 
     window.destroy();
 
+    input.shutdown();
+
     if (sdlInitialized)
     {
         SDL_Quit();
