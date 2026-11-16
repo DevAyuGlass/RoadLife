@@ -6,6 +6,7 @@
 
 #include <memory>
 
+class IRenderer;
 class Scene;
 class DeveloperConsole;
 
@@ -27,6 +28,7 @@ private:
     Time time;
     Camera camera;
 
+    std::unique_ptr<IRenderer> renderer;
     std::unique_ptr<Scene> scene;
     std::unique_ptr<DeveloperConsole> console;
 
