@@ -15,6 +15,8 @@ public:
     glm::vec3 getPosition() const;
     float getMovementSpeed() const;
     void setMovementSpeed(float speed);
+    float getFieldOfView() const;
+    void setFieldOfView(float degrees);
     void setPosition(const glm::vec3& value);
     void reset();
 
@@ -24,6 +26,7 @@ private:
     float pitch;
     float movementSpeed;
     float mouseSensitivity;
+    float fieldOfView;
 
     glm::vec3 getFront() const;
 };
