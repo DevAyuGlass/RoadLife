@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <SDL3/SDL.h>
@@ -8,7 +7,8 @@
 #include <string>
 #include <vector>
 
-class DeveloperConsole
+class Scene;
+class Camera;
 
 class DeveloperConsole
 {
@@ -90,4 +90,3 @@ private:
 
     static std::string formatTime(float hours);
 };
-
