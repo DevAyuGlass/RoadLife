@@ -235,7 +235,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  time scale 10        - time speed multiplier");
         addLine("  time pause           - pause game clock");
         addLine("  time resume          - resume game clock");
-        addLine("  wireframe            - toggle wireframe rendering");
+        addLine("  wireframe [on|off]   - toggle or set wireframe rendering");
         addLine("  fog                  - show fog state");
         addLine("  fog on|off           - enable or disable distance fog");
         addLine("  fog density 0.01     - set fog density (0.0001..0.1)");
@@ -243,6 +243,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  grid [on|off]        - toggle ground grid");
         addLine("  camera               - show camera position and speed");
         addLine("  camera speed 10      - set movement speed (0.1..100)");
+        addLine("  SHIFT                - sprint while flying around");
         addLine("  camera reset         - reset camera position and rotation");
         addLine("  camera teleport x y z- move camera to coordinates");
         addLine("  objects              - show scene object count");
@@ -267,10 +268,17 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
     }
     else if (first == "wireframe")
     {
-        scene.setWireframe(!scene.isWireframe());
-        addLine(scene.isWireframe()
-            ? "[SUCCESS] Wireframe rendering enabled."
-            : "[SUCCESS] Solid rendering enabled.");
+        if (second == "on" || second == "off")
+            scene.setWireframe(second == "on");
+        else if (second.empty())
+            scene.setWireframe(!scene.isWireframe());
+        else
+            addLine("[WARNING] Usage: wireframe [on|off]");
+
+        if (second.empty() || second == "on" || second == "off")
+            addLine(scene.isWireframe()
+                ? "[SUCCESS] Wireframe rendering enabled."
+                : "[SUCCESS] Solid rendering enabled.");
     }
     else if (first == "fog")
     {
@@ -569,7 +577,8 @@ void DeveloperConsole::autocomplete()
 {
     const std::vector<std::string> commands = {
         "help", "clear", "fps", "time", "time set", "time scale",
-        "time pause", "time resume", "wireframe", "fog", "fog density",
+        "time pause", "time resume", "wireframe", "wireframe on", "wireframe off",
+        "fog", "fog density",
         "shadows", "grid", "camera", "camera speed", "camera reset",
         "camera teleport", "objects", "objects clear", "spawn cube"
     };
