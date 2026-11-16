@@ -234,6 +234,9 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
         addLine("  time scale 10        - time speed multiplier");
         addLine("  time pause           - pause game clock");
         addLine("  time resume          - resume game clock");
+        addLine("  wireframe            - toggle wireframe rendering");
+        addLine("  fog                  - show fog state");
+        addLine("  fog on|off           - enable or disable distance fog");
     }
     else if (first == "clear")
     {
@@ -250,6 +253,33 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
                << fps;
 
         addLine(result.str());
+    }
+    else if (first == "wireframe")
+    {
+        scene.setWireframe(!scene.isWireframe());
+        addLine(scene.isWireframe()
+            ? "[SUCCESS] Wireframe rendering enabled."
+            : "[SUCCESS] Solid rendering enabled.");
+    }
+    else if (first == "fog")
+    {
+        if (second.empty())
+        {
+            addLine(scene.isFogEnabled()
+                ? "[INFO] Distance fog: enabled."
+                : "[INFO] Distance fog: disabled.");
+        }
+        else if (second == "on" || second == "off")
+        {
+            scene.setFogEnabled(second == "on");
+            addLine(second == "on"
+                ? "[SUCCESS] Distance fog enabled."
+                : "[SUCCESS] Distance fog disabled.");
+        }
+        else
+        {
+            addLine("[WARNING] Usage: fog [on|off]");
+        }
     }
     else if (first == "time")
     {
@@ -396,7 +426,7 @@ void DeveloperConsole::executeCommand(Scene& scene, float fps)
 
 void DeveloperConsole::autocomplete()
 {
-    const std::array<std::string, 9> commands = {
+    const std::array<std::string, 11> commands = {
         "help",
         "clear",
         "fps",
@@ -405,6 +435,8 @@ void DeveloperConsole::autocomplete()
         "time scale",
         "time pause",
         "time resume",
+        "wireframe",
+        "fog",
         "time"
     };
 
