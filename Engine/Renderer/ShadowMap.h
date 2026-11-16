@@ -1,6 +1,6 @@
 #pragma once
 
-#include <epoxy/gl.h>
+#include GL.h
 
 class ShadowMap
 {
