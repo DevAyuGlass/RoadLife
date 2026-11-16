@@ -29,6 +29,15 @@ public:
     bool isWireframe() const;
     void setFogEnabled(bool enabled);
     bool isFogEnabled() const;
+    void setFogDensity(float density);
+    float getFogDensity() const;
+    void setShadowsEnabled(bool enabled);
+    bool areShadowsEnabled() const;
+    void setGridEnabled(bool enabled);
+    bool isGridEnabled() const;
+    std::size_t getObjectCount() const;
+    void spawnCube(const glm::vec3& position, float scale);
+    void clearObjects();
 
     void render(
         const glm::mat4& view,
@@ -62,6 +71,8 @@ private:
     bool wireframe = false;
     bool fogEnabled = true;
     float fogDensity = 0.012f;
+    bool shadowsEnabled = true;
+    bool gridEnabled = true;
 
     float dayFactor = 1.0f;
     float sunHeight = 0.0f;
