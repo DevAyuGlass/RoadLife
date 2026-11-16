@@ -1,6 +1,6 @@
 #pragma once
 
-#include GL.h
+#include "GL.h"
 
 class ShadowMap
 {

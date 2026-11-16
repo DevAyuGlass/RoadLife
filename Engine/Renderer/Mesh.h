@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include GL.h
+#include "GL.h"
 #include <vector>
 
 class Mesh
