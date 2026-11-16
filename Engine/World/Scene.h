@@ -25,6 +25,11 @@ public:
     void setTimeOfDay(float hours);
     float getTimeOfDay() const;
 
+    void setWireframe(bool enabled);
+    bool isWireframe() const;
+    void setFogEnabled(bool enabled);
+    bool isFogEnabled() const;
+
     void render(
         const glm::mat4& view,
         const glm::mat4& projection
@@ -54,6 +59,9 @@ private:
     std::vector<Object> objects;
 
     float timeOfDay = 14.0f;
+    bool wireframe = false;
+    bool fogEnabled = true;
+    float fogDensity = 0.012f;
 
     float dayFactor = 1.0f;
     float sunHeight = 0.0f;
