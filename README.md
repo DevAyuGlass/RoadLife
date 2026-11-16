@@ -99,3 +99,15 @@ These are project targets, not a claim of current build support. Platform suppor
 ## License
 
 RoadLife is distributed under the MIT License. Third-party libraries and assets remain subject to their own licenses.
+
+
+## Android (terminal-only build)
+
+The Android project targets `arm64-v8a` and OpenGL ES 3.0. Install Android SDK platform 36, Build Tools 36, NDK 28.2.13676358, CMake 3.31.6 and Java 17 or newer. Then run:
+
+```bash
+bash scripts/build-android.sh
+bash scripts/install-android.sh
+```
+
+The first build downloads the official SDL3 Android AAR and Gradle distribution. The debug APK is written to `build-android/apk/RoadLife-debug.apk`. See [android/README.md](android/README.md) for details and current Android feature limitations.
