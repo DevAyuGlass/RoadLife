@@ -19,6 +19,7 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec3 aColor;
 
 uniform mat4 uModel;
+uniform mat3 uNormalMatrix;
 uniform mat4 uView;
 uniform mat4 uProjection;
 uniform mat4 uLightSpaceMatrix;
@@ -33,7 +34,7 @@ void main()
     vec4 worldPosition = uModel * vec4(aPosition, 1.0);
 
     vWorldPosition = worldPosition.xyz;
-    vNormal = mat3(transpose(inverse(uModel))) * aNormal;
+    vNormal = uNormalMatrix * aNormal;
     vColor = aColor;
 
     vLightSpacePosition = uLightSpaceMatrix * worldPosition;
@@ -869,6 +870,7 @@ void Scene::renderObjects(
     // Ground.
     shader->setBool("uUseLighting", true);
     shader->setMat4("uModel", glm::mat4(1.0f));
+    shader->setMat3("uNormalMatrix", glm::mat3(1.0f));
     shader->setVec3("uObjectColor", {0.30f, 0.32f, 0.29f});
     shader->setVec3("uSpecularColor", {0.05f, 0.05f, 0.05f});
 
@@ -892,6 +894,10 @@ void Scene::renderObjects(
         model = glm::scale(model, object.scale);
 
         shader->setMat4("uModel", model);
+        // Compute the normal matrix once per object, not once per vertex.
+        const glm::mat3 normalMatrix =
+            glm::transpose(glm::inverse(glm::mat3(model)));
+        shader->setMat3("uNormalMatrix", normalMatrix);
         shader->setVec3("uObjectColor", object.color);
         shader->setVec3("uSpecularColor", object.specular);
 
