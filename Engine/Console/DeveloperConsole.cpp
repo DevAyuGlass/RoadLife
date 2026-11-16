@@ -245,7 +245,7 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  camera speed 10      - set movement speed (0.1..100)");
         addLine("  SHIFT                - sprint while flying around");
         addLine("  camera reset         - reset camera position and rotation");
-        addLine("  camera teleport x y z- move camera to coordinates");
+        addLine("  camera teleport x y z - move camera to coordinates");
         addLine("  objects              - show scene object count");
         addLine("  spawn cube x y z [s] - spawn a cube (default size 1)");
         addLine("  objects clear        - remove all scene cubes");
