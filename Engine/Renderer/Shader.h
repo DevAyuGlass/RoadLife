@@ -19,6 +19,7 @@ public:
     void setVec3(const char* name, const glm::vec3& value) const;
     void setBool(const char* name, bool value) const;
     void setInt(const char* name, int value) const;
+    void setFloat(const char* name, float value) const;
 
     bool isValid() const;
 
