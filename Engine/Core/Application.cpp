@@ -163,6 +163,19 @@ void Application::processEvents()
 
         if (event.type == SDL_EVENT_KEY_DOWN &&
             !event.key.repeat &&
+            event.key.key == SDLK_v)
+        {
+            const Camera::Mode nextMode =
+                camera.getMode() == Camera::Mode::Flight
+                    ? Camera::Mode::Walk
+                    : Camera::Mode::Flight;
+            camera.setMode(nextMode);
+            std::cout << "Movement mode: " << camera.getModeName()
+                      << " (V to switch)\\n";
+        }
+
+        if (event.type == SDL_EVENT_KEY_DOWN &&
+            !event.key.repeat &&
             event.key.key == SDLK_ESCAPE)
         {
             mouseCaptured = !mouseCaptured;
@@ -239,7 +252,8 @@ void Application::render()
     {
         const std::string title =
             "RoadLife Engine 0.4 | FPS: " +
-            std::to_string(currentFPS);
+            std::to_string(currentFPS) +
+            " | MODE: " + camera.getModeName() + " (V)";
 
         SDL_SetWindowTitle(window.getHandle(), title.c_str());
         lastWindowFPS = currentFPS;
