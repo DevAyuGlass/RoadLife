@@ -25,7 +25,7 @@ bool Application::initialize()
     if (initialized)
         return true;
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         std::cerr << "SDL initialization error: " << SDL_GetError() << '\n';
         return false;
@@ -112,6 +112,8 @@ void Application::processEvents()
             continue;
         }
 
+        input.handleEvent(event, window.getWidth(), window.getHeight());
+
         const bool consoleAvailable =
             console && console->isValid();
 
@@ -175,11 +177,7 @@ void Application::update()
     const bool consoleOpen =
         console && console->isValid() && console->isOpen();
 
-    if (!consoleOpen)
-    {
-        const bool* keys = SDL_GetKeyboardState(nullptr);
-        camera.processKeyboard(keys, time.getDeltaTime());
-    }
+    input.update(camera, time.getDeltaTime(), !consoleOpen);
 
     const bool timePaused =
         console && console->isValid() && console->isTimePaused();
