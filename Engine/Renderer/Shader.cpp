@@ -72,10 +72,29 @@ void Shader::use() const
     glUseProgram(program);
 }
 
+GLint Shader::getLocation(const char* name) const
+{
+    const auto it = uniformLocations.find(name);
+    if (it != uniformLocations.end())
+        return it->second;
+
+    const GLint location = glGetUniformLocation(program, name);
+    uniformLocations.emplace(name, location);
+    return location;
+}
+
 void Shader::setMat4(const char* name, const glm::mat4& value) const
 {
     glUniformMatrix4fv(
-        glGetUniformLocation(program, name),
+        getLocation(name),
+        1, GL_FALSE, glm::value_ptr(value)
+    );
+}
+
+void Shader::setMat3(const char* name, const glm::mat3& value) const
+{
+    glUniformMatrix3fv(
+        getLocation(name),
         1, GL_FALSE, glm::value_ptr(value)
     );
 }
@@ -83,27 +102,27 @@ void Shader::setMat4(const char* name, const glm::mat4& value) const
 void Shader::setVec3(const char* name, const glm::vec3& value) const
 {
     glUniform3fv(
-        glGetUniformLocation(program, name),
+        getLocation(name),
         1, glm::value_ptr(value)
     );
 }
 
 void Shader::setBool(const char* name, bool value) const
 {
-    glUniform1i(glGetUniformLocation(program, name), value ? 1 : 0);
+    glUniform1i(getLocation(name), value ? 1 : 0);
 }
 
 void Shader::setInt(const char* name, int value) const
 {
     glUniform1i(
-        glGetUniformLocation(program, name),
+        getLocation(name),
         value
     );
 }
 
 void Shader::setFloat(const char* name, float value) const
 {
-    glUniform1f(glGetUniformLocation(program, name), value);
+    glUniform1f(getLocation(name), value);
 }
 
 bool Shader::isValid() const
