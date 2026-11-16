@@ -8,6 +8,13 @@ SDL_VERSION="3.4.16"
 GRADLE_VERSION="8.13"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/roadlife-android"
 
+for tool in curl unzip; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        echo "ERROR: Required tool not found: $tool" >&2
+        exit 1
+    fi
+done
+
 if ! command -v java >/dev/null 2>&1; then
     echo "ERROR: Java is missing. Install OpenJDK 17." >&2
     exit 1
