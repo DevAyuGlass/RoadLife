@@ -9,7 +9,8 @@ Camera::Camera()
       yaw(-90.0f),
       pitch(0.0f),
       movementSpeed(5.0f),
-      mouseSensitivity(0.1f)
+      mouseSensitivity(0.1f),
+      fieldOfView(70.0f)
 {
 }
 
@@ -89,6 +90,16 @@ void Camera::setMovementSpeed(float speed)
     movementSpeed = glm::clamp(speed, 0.1f, 100.0f);
 }
 
+float Camera::getFieldOfView() const
+{
+    return fieldOfView;
+}
+
+void Camera::setFieldOfView(float degrees)
+{
+    fieldOfView = glm::clamp(degrees, 30.0f, 110.0f);
+}
+
 void Camera::setPosition(const glm::vec3& value)
 {
     position = value;
@@ -100,5 +111,6 @@ void Camera::reset()
     yaw = -90.0f;
     pitch = 0.0f;
     movementSpeed = 5.0f;
+    fieldOfView = 70.0f;
 }
 
