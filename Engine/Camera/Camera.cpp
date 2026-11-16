@@ -79,3 +79,26 @@ glm::vec3 Camera::getPosition() const
     return position;
 }
 
+float Camera::getMovementSpeed() const
+{
+    return movementSpeed;
+}
+
+void Camera::setMovementSpeed(float speed)
+{
+    movementSpeed = glm::clamp(speed, 0.1f, 100.0f);
+}
+
+void Camera::setPosition(const glm::vec3& value)
+{
+    position = value;
+}
+
+void Camera::reset()
+{
+    position = glm::vec3(0.0f, 0.0f, 5.0f);
+    yaw = -90.0f;
+    pitch = 0.0f;
+    movementSpeed = 5.0f;
+}
+
