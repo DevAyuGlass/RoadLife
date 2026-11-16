@@ -12,7 +12,7 @@ The desktop OpenGL 4.2 build remains separate and unchanged at the dependency le
 - curl and unzip
 - An Android device with OpenGL ES 3.0 (RoadLife currently targets arm64-v8a)
 
-The build script downloads the official SDL3 3.2.16 Android AAR and Gradle 8.9
+The build script downloads the official SDL3 3.4.16 Android AAR and Gradle 8.13
 on first run. CMake downloads GLM 1.0.1 when configuring the native build.
 
 ## Build
