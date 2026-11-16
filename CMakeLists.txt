@@ -34,6 +34,7 @@ if(ANDROID)
     FetchContent_MakeAvailable(glm)
 
     add_library(main SHARED ${ROADLIFE_SOURCES})
+    target_include_directories(main PRIVATE Engine)
     target_link_libraries(main PRIVATE
         SDL3::SDL3
         glm::glm
@@ -57,6 +58,8 @@ else()
         Engine/Console/DeveloperConsole.cpp
     )
 
+    target_include_directories(RoadLife PRIVATE Engine)
+
     target_link_libraries(RoadLife PRIVATE
         SDL3::SDL3
         SDL3_ttf::SDL3_ttf
@@ -72,4 +75,3 @@ else()
     endif()
 endif()
 
-target_include_directories(${ANDROID} PRIVATE Engine)
