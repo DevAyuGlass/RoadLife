@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-class Scene;
+class DeveloperConsole
 
 class DeveloperConsole
 {
@@ -23,7 +23,7 @@ public:
     bool isOpen() const;
 
     void toggle(SDL_Window* window);
-    void handleEvent(const SDL_Event& event, Scene& scene, float fps);
+    void handleEvent(const SDL_Event& event, Scene& scene, Camera& camera, float fps);
     void render(int width, int height, const Scene& scene, float fps);
 
     float getTimeScale() const;
@@ -60,7 +60,7 @@ private:
     int historyPosition = 0;
 
     void addLine(const std::string& text);
-    void executeCommand(Scene& scene, float fps);
+    void executeCommand(Scene& scene, Camera& camera, float fps);
     void autocomplete();
 
     bool createGraphics();
