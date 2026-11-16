@@ -9,6 +9,8 @@ public:
     Camera();
 
     void processKeyboard(const bool* keys, float deltaTime);
+    void processMovement(float forward, float strafe, float vertical,
+                         bool sprint, float deltaTime);
     void processMouse(float xOffset, float yOffset);
 
     glm::mat4 getViewMatrix() const;
