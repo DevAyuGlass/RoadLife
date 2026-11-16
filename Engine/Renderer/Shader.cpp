@@ -101,6 +101,11 @@ void Shader::setInt(const char* name, int value) const
     );
 }
 
+void Shader::setFloat(const char* name, float value) const
+{
+    glUniform1f(glGetUniformLocation(program, name), value);
+}
+
 bool Shader::isValid() const
 {
     return program != 0;
