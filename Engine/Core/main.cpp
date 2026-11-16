@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <SDL3/SDL_main.h>
+
 #include <iostream>
 
 int main()
