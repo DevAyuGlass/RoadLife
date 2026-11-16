@@ -11,6 +11,8 @@
 #include <iostream>
 #include <string>
 
+Application::Application() = default;
+
 Application::~Application()
 {
     shutdown();
