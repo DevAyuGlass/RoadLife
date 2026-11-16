@@ -12,12 +12,15 @@ bool Window::create(const char* title, int requestedWidth, int requestedHeight)
     if (isValid())
         return true;
 
+#if defined(__ANDROID__)
+    if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) ||
+        !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0) ||
+        !SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) ||
+#else
     if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4) ||
         !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2) ||
-        !SDL_GL_SetAttribute(
-            SDL_GL_CONTEXT_PROFILE_MASK,
-            SDL_GL_CONTEXT_PROFILE_CORE
-        ) ||
+        !SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) ||
+#endif
         !SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24) ||
         !SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1))
     {
@@ -30,7 +33,11 @@ bool Window::create(const char* title, int requestedWidth, int requestedHeight)
         requestedWidth,
         requestedHeight,
         SDL_WINDOW_OPENGL |
+#if defined(__ANDROID__)
+        SDL_WINDOW_FULLSCREEN |
+#else
         SDL_WINDOW_RESIZABLE |
+#endif
         SDL_WINDOW_HIGH_PIXEL_DENSITY
     );
 
