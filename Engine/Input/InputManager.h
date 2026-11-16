@@ -14,6 +14,7 @@ public:
     InputManager& operator=(const InputManager&) = delete;
 
     void handleEvent(const SDL_Event& event, int viewportWidth, int viewportHeight);
+    void shutdown();
     void update(Camera& camera, float deltaTime, bool enabled);
     void reset();
 
