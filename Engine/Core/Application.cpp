@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "../Renderer/IRenderer.h"
+#include "../Renderer/OpenGL/OpenGLRenderer.h"
 #include "../World/Scene.h"
 #include "../Console/DeveloperConsole.h"
 
@@ -40,6 +42,15 @@ bool Application::initialize()
     std::cout << "RoadLife Engine 0.4\n";
     std::cout << "OpenGL: " << glGetString(GL_VERSION) << '\n';
     std::cout << "GPU: " << glGetString(GL_RENDERER) << '\n';
+
+    renderer = std::make_unique<OpenGLRenderer>();
+
+    if (!renderer->initialize())
+    {
+        std::cerr << "Renderer initialization failed\n";
+        shutdown();
+        return false;
+    }
 
     scene = std::make_unique<Scene>();
 
@@ -181,7 +192,7 @@ void Application::update()
 
 void Application::render()
 {
-    if (!scene || !window.isValid())
+    if (!scene || !renderer || !window.isValid())
         return;
 
     int width = 0;
@@ -191,13 +202,7 @@ void Application::render()
     if (width <= 0 || height <= 0)
         return;
 
-    glViewport(0, 0, width, height);
-
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    glClearColor(0.055f, 0.065f, 0.085f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderer->beginFrame(width, height);
 
     const glm::mat4 projection = glm::perspective(
         glm::radians(70.0f),
@@ -240,6 +245,10 @@ void Application::shutdown()
     // GL-backed resources must be destroyed before the GL context.
     console.reset();
     scene.reset();
+
+    if (renderer)
+        renderer->shutdown();
+    renderer.reset();
 
     window.destroy();
 
