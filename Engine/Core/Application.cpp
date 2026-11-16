@@ -206,7 +206,7 @@ void Application::render()
     renderer->beginFrame(width, height);
 
     const glm::mat4 projection = glm::perspective(
-        glm::radians(70.0f),
+        glm::radians(camera.getFieldOfView()),
         static_cast<float>(width) / static_cast<float>(height),
         0.1f,
         1000.0f
