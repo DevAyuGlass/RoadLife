@@ -144,6 +144,7 @@ void Application::processEvents()
                 console->handleEvent(
                     event,
                     *scene,
+                    camera,
                     static_cast<float>(time.getFPS())
                 );
             }
