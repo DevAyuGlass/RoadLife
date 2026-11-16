@@ -22,7 +22,7 @@ public:
 
 private:
     SDL_Gamepad* gamepad = nullptr;
-    SDL_GamepadID gamepadId = 0;
+    SDL_JoystickID gamepadId = 0;
 
     SDL_FingerID moveFinger = 0;
     SDL_FingerID lookFinger = 0;
