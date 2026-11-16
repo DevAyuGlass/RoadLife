@@ -3,6 +3,7 @@
 #include "Time.h"
 #include "../Platform/Window/Window.h"
 #include "../Camera/Camera.h"
+#include "../Input/InputManager.h"
 
 #include <memory>
 
@@ -27,6 +28,7 @@ private:
     Window window;
     Time time;
     Camera camera;
+    InputManager input;
 
     std::unique_ptr<IRenderer> renderer;
     std::unique_ptr<Scene> scene;
