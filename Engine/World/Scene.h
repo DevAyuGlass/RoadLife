@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
-#include <epoxy/gl.h>
+#include "../Renderer/GL.h"
 
 class Scene
 {
