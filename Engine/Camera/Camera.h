@@ -16,7 +16,7 @@ public:
 
     Camera();
 
-    void setMode(Mode value);
+    void setMode(Mode value, Scene& scene);
     Mode getMode() const;
     const char* getModeName() const;
 
