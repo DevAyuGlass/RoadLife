@@ -322,22 +322,32 @@ Scene::Scene()
         fragmentShader
     );
 
+#if !defined(__ANDROID__)
     depthShader = std::make_unique<Shader>(
         depthVertexShader,
         depthFragmentShader
     );
+#else
+    // Mobile baseline: skip the extra shadow pass and its GPU resources.
+    shadowsEnabled = false;
+    gridEnabled = false;
+#endif
 
     skyShader = std::make_unique<Shader>(
         skyVertexShader,
         skyFragmentShader
     );
 
+#if !defined(__ANDROID__)
     shadowMap = std::make_unique<ShadowMap>(1024);
+#endif
 
     glGenVertexArrays(1, &skyVAO);
 
     createCube();
+#if !defined(__ANDROID__)
     createGrid();
+#endif
     createGround();
 
     objects = {
@@ -386,12 +396,20 @@ Scene::~Scene()
 
 bool Scene::isValid() const
 {
-    return shader && shader->isValid() &&
+    const bool baseResourcesValid =
+        shader && shader->isValid() &&
+        skyShader && skyShader->isValid() &&
+        skyVAO != 0 &&
+        cube && ground;
+
+#if defined(__ANDROID__)
+    return baseResourcesValid;
+#else
+    return baseResourcesValid &&
            depthShader && depthShader->isValid() &&
-           skyShader && skyShader->isValid() &&
-           skyVAO != 0 &&
            shadowMap && shadowMap->isValid() &&
-           cube && grid && ground;
+           grid;
+#endif
 }
 
 // ============================================================
@@ -446,7 +464,12 @@ float Scene::getFogDensity() const
 
 void Scene::setShadowsEnabled(bool enabled)
 {
+#if defined(__ANDROID__)
+    static_cast<void>(enabled);
+    shadowsEnabled = false;
+#else
     shadowsEnabled = enabled;
+#endif
 }
 
 bool Scene::areShadowsEnabled() const
@@ -1073,7 +1096,7 @@ void Scene::renderObjects(
     shader->setVec3("uLightColor", lightColor);
     shader->setBool("uFogEnabled", fogEnabled);
     // Avoid sampling a stale shadow map while the sun is below the horizon.
-    shader->setBool("uShadowsEnabled", shadowsEnabled && sunHeight > 0.0f);
+    shader->setBool("uShadowsEnabled", shadowsEnabled && shadowMap && sunHeight > 0.0f);
     shader->setFloat("uFogDensity", fogDensity);
     shader->setVec3("uFogColor", skyHorizonColor);
 
@@ -1083,12 +1106,13 @@ void Scene::renderObjects(
 
     shader->setVec3("uViewPosition", cameraPosition);
 
-    glActiveTexture(GL_TEXTURE1);
-
-    glBindTexture(
-        GL_TEXTURE_2D,
-        shadowMap->getDepthTexture()
-    );
+    // The mobile profile has no shadow map; the shader's shadow branch is
+    // disabled there, so avoid allocating or binding a depth texture.
+    if (shadowMap)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthTexture());
+    }
 
     shader->setInt("uShadowMap", 1);
 
@@ -1129,9 +1153,12 @@ void Scene::renderObjects(
         cube->draw();
     }
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
+    if (shadowMap)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE0);
+    }
 }
 
 // ============================================================
@@ -1146,7 +1173,7 @@ void Scene::render(
     renderSky(view, projection);
 
     // Keep the shadow map solid even when the visible scene is wireframe.
-    if (shadowsEnabled && sunHeight > 0.0f)
+    if (shadowsEnabled && shadowMap && depthShader && sunHeight > 0.0f)
         renderDepthPass();
 
 #if !defined(__ANDROID__)
