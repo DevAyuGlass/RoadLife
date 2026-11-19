@@ -489,6 +489,50 @@ void Scene::clearObjects()
     objects.clear();
 }
 
+bool Scene::snapPlayerToSupport(
+    glm::vec3& position,
+    float radius,
+    float eyeHeight
+) const
+{
+    constexpr float groundY = -1.02f;
+    constexpr float maxSnapAbove = 0.35f;
+    constexpr float maxSnapBelow = 0.18f;
+
+    const float feet = position.y - eyeHeight;
+    float supportY = groundY;
+    bool foundSupport = feet >= groundY - maxSnapBelow &&
+                        feet <= groundY + maxSnapAbove;
+
+    for (const auto& object : objects)
+    {
+        const float minX = object.position.x - object.scale.x;
+        const float maxX = object.position.x + object.scale.x;
+        const float minZ = object.position.z - object.scale.z;
+        const float maxZ = object.position.z + object.scale.z;
+        const float topY = object.position.y + object.scale.y;
+
+        const bool overTop = position.x + radius > minX &&
+                             position.x - radius < maxX &&
+                             position.z + radius > minZ &&
+                             position.z - radius < maxZ;
+        const bool closeToTop = feet >= topY - maxSnapBelow &&
+                                feet <= topY + maxSnapAbove;
+
+        if (overTop && closeToTop && (!foundSupport || topY > supportY))
+        {
+            supportY = topY;
+            foundSupport = true;
+        }
+    }
+
+    if (!foundSupport)
+        return false;
+
+    position.y = supportY + eyeHeight;
+    return true;
+}
+
 // ============================================================
 // PLAYER COLLISION
 // ============================================================
