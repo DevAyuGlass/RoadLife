@@ -169,7 +169,7 @@ void Application::processEvents()
                 camera.getMode() == Camera::Mode::Flight
                     ? Camera::Mode::Walk
                     : Camera::Mode::Flight;
-            camera.setMode(nextMode);
+            camera.setMode(nextMode, *scene);
             std::cout << "Movement mode: " << camera.getModeName()
                       << " (V to switch)\\n";
         }
