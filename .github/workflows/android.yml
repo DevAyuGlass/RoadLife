@@ -1,4 +1,4 @@
-name: Android APK
+name: Android Builds
 
 on:
   push:
@@ -15,14 +15,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-apk-${{ github.ref }}
+  group: android-builds-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build debug APK (arm64-v8a)
+    name: Build Android APKs (all ABIs)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -60,13 +60,36 @@ jobs:
           restore-keys: |
             roadlife-android-${{ runner.os }}-
 
-      - name: Build APK
-        run: bash scripts/build-android.sh
+      - name: Restore release signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ROADLIFE_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n "$KEYSTORE_BASE64" ]]; then
+            mkdir -p "$RUNNER_TEMP/roadlife-signing"
+            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/roadlife-signing/roadlife-release.jks"
+            chmod 600 "$RUNNER_TEMP/roadlife-signing/roadlife-release.jks"
+            echo "ROADLIFE_KEYSTORE_PATH=$RUNNER_TEMP/roadlife-signing/roadlife-release.jks" >> "$GITHUB_ENV"
+          fi
 
-      - name: Upload APK
+      - name: Build debug and release APKs
+        env:
+          ROADLIFE_KEYSTORE_PASSWORD: ${{ secrets.ROADLIFE_KEYSTORE_PASSWORD }}
+          ROADLIFE_KEY_ALIAS: ${{ secrets.ROADLIFE_KEY_ALIAS }}
+          ROADLIFE_KEY_PASSWORD: ${{ secrets.ROADLIFE_KEY_PASSWORD }}
+        run: bash scripts/build-android.sh --all
+
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: RoadLife-Android-debug
           path: build-android/apk/RoadLife-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoadLife-Android-release
+          path: build-android/apk/RoadLife-release.apk
+          if-no-files-found: error
+          retention-days: 30

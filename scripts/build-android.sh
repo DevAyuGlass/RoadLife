@@ -8,6 +8,20 @@ SDL_VERSION="3.4.16"
 GRADLE_VERSION="8.13"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/roadlife-android"
 
+BUILD_DEBUG=false
+BUILD_RELEASE=false
+if [[ $# -eq 0 || "$1" == "--debug" ]]; then
+    BUILD_DEBUG=true
+elif [[ "$1" == "--release" ]]; then
+    BUILD_RELEASE=true
+elif [[ "$1" == "--all" ]]; then
+    BUILD_DEBUG=true
+    BUILD_RELEASE=true
+else
+    echo "Usage: $0 [--debug|--release|--all]" >&2
+    exit 2
+fi
+
 for tool in curl unzip; do
     if ! command -v "$tool" >/dev/null 2>&1; then
         echo "ERROR: Required tool not found: $tool" >&2
@@ -65,17 +79,42 @@ if [[ ! -x "$GRADLE_BIN" ]]; then
     unzip -q "$DIST" -d "$CACHE_DIR"
 fi
 
-echo "Building RoadLife Android APK (arm64-v8a)..."
-"$GRADLE_BIN" --no-daemon -p "$ANDROID_DIR" :app:assembleDebug
-
-APK="$ANDROID_DIR/app/build/outputs/apk/debug/app-debug.apk"
-if [[ ! -f "$APK" ]]; then
-    echo "ERROR: Gradle finished but APK was not found at $APK" >&2
-    exit 1
+TASKS=()
+if [[ "$BUILD_DEBUG" == true ]]; then
+    TASKS+=(":app:assembleDebug")
 fi
+if [[ "$BUILD_RELEASE" == true ]]; then
+    TASKS+=(":app:assembleRelease")
+fi
+
+echo "Building RoadLife Android APKs for arm64-v8a, armeabi-v7a, x86 and x86_64..."
+"$GRADLE_BIN" --no-daemon -p "$ANDROID_DIR" "${TASKS[@]}"
 
 OUT="$ROOT_DIR/build-android/apk"
 mkdir -p "$OUT"
-cp "$APK" "$OUT/RoadLife-debug.apk"
-echo
-echo "APK ready: $OUT/RoadLife-debug.apk"
+
+if [[ "$BUILD_DEBUG" == true ]]; then
+    APK="$ANDROID_DIR/app/build/outputs/apk/debug/app-debug.apk"
+    if [[ ! -f "$APK" ]]; then
+        echo "ERROR: Debug APK not found at $APK" >&2
+        exit 1
+    fi
+    cp "$APK" "$OUT/RoadLife-debug.apk"
+    echo "Debug APK ready: $OUT/RoadLife-debug.apk"
+fi
+
+if [[ "$BUILD_RELEASE" == true ]]; then
+    APK="$ANDROID_DIR/app/build/outputs/apk/release/app-release.apk"
+    if [[ ! -f "$APK" ]]; then
+        APK="$ANDROID_DIR/app/build/outputs/apk/release/app-release-unsigned.apk"
+    fi
+    if [[ ! -f "$APK" ]]; then
+        echo "ERROR: Release APK not found in $ANDROID_DIR/app/build/outputs/apk/release" >&2
+        exit 1
+    fi
+    cp "$APK" "$OUT/RoadLife-release.apk"
+    echo "Release APK ready: $OUT/RoadLife-release.apk"
+    if [[ -z "${ROADLIFE_KEYSTORE_PATH:-}" ]]; then
+        echo "WARNING: Release APK is unsigned. Configure ROADLIFE signing environment variables to sign it."
+    fi
+fi
