@@ -399,12 +399,12 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
     {
         if (second == "walk")
         {
-            camera.setMode(Camera::Mode::Walk);
+            camera.setMode(Camera::Mode::Walk, scene);
             addLine("[SUCCESS] Walking mode enabled. WASD move, SPACE jump, CTRL crouch.");
         }
         else if (second == "flight")
         {
-            camera.setMode(Camera::Mode::Flight);
+            camera.setMode(Camera::Mode::Flight, scene);
             addLine("[SUCCESS] Free-fly mode enabled.");
         }
         else if (second.empty())
