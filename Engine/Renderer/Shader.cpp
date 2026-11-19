@@ -3,6 +3,9 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#if defined(__ANDROID__)
+#include <SDL3/SDL.h>
+#endif
 #include <string>
 
 GLuint Shader::compile(GLenum type, const char* source)
@@ -24,7 +27,11 @@ GLuint Shader::compile(GLenum type, const char* source)
     {
         char log[2048]{};
         glGetShaderInfoLog(shader, sizeof(log), nullptr, log);
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Shader compilation error: %s", log);
+#else
         std::cerr << "Shader compilation error:\n" << log << '\n';
+#endif
 
         glDeleteShader(shader);
         return 0;
@@ -58,7 +65,11 @@ Shader::Shader(const char* vertexSource, const char* fragmentSource)
     {
         char log[2048]{};
         glGetProgramInfoLog(program, sizeof(log), nullptr, log);
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Shader linking error: %s", log);
+#else
         std::cerr << "Shader linking error:\n" << log << '\n';
+#endif
 
         glDeleteProgram(program);
         program = 0;

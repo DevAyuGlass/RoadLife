@@ -8,6 +8,9 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#if defined(__ANDROID__)
+#include <SDL3/SDL.h>
+#endif
 
 // ============================================================
 // MAIN VERTEX SHADER
@@ -317,10 +320,16 @@ Scene::Scene()
 {
     objects.reserve(256);
 
+#if defined(__ANDROID__)
+    SDL_Log("Scene: compiling main scene shader");
+#endif
     shader = std::make_unique<Shader>(
         vertexShader,
         fragmentShader
     );
+#if defined(__ANDROID__)
+    SDL_Log("Scene: main scene shader %s", shader->isValid() ? "OK" : "INVALID");
+#endif
 
 #if !defined(__ANDROID__)
     depthShader = std::make_unique<Shader>(
@@ -333,15 +342,24 @@ Scene::Scene()
     gridEnabled = false;
 #endif
 
+#if defined(__ANDROID__)
+    SDL_Log("Scene: compiling sky shader");
+#endif
     skyShader = std::make_unique<Shader>(
         skyVertexShader,
         skyFragmentShader
     );
+#if defined(__ANDROID__)
+    SDL_Log("Scene: sky shader %s", skyShader->isValid() ? "OK" : "INVALID");
+#endif
 
 #if !defined(__ANDROID__)
     shadowMap = std::make_unique<ShadowMap>(1024);
 #endif
 
+#if defined(__ANDROID__)
+    SDL_Log("Scene: creating sky VAO and meshes");
+#endif
     glGenVertexArrays(1, &skyVAO);
 
     createCube();
@@ -349,6 +367,12 @@ Scene::Scene()
     createGrid();
 #endif
     createGround();
+#if defined(__ANDROID__)
+    SDL_Log("Scene: meshes created (skyVAO=%u, cube=%s, ground=%s)",
+            static_cast<unsigned int>(skyVAO),
+            cube ? "OK" : "NULL",
+            ground ? "OK" : "NULL");
+#endif
 
     objects = {
         {
@@ -378,6 +402,9 @@ Scene::Scene()
     };
 
     updateLighting();
+#if defined(__ANDROID__)
+    SDL_Log("Scene: constructor finished");
+#endif
 }
 
 // ============================================================
@@ -403,6 +430,20 @@ bool Scene::isValid() const
         cube && ground;
 
 #if defined(__ANDROID__)
+    if (!baseResourcesValid)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Scene validation failed: mainShader=%d skyShader=%d skyVAO=%u cube=%d ground=%d",
+                     shader && shader->isValid(),
+                     skyShader && skyShader->isValid(),
+                     static_cast<unsigned int>(skyVAO),
+                     cube != nullptr,
+                     ground != nullptr);
+    }
+    else
+    {
+        SDL_Log("Scene validation: OK");
+    }
     return baseResourcesValid;
 #else
     return baseResourcesValid &&

@@ -26,13 +26,22 @@ bool Application::initialize()
     if (initialized)
         return true;
 
+#if defined(__ANDROID__)
+    SDL_Log("RoadLife startup [1/6]: SDL_Init");
+#endif
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed: %s", SDL_GetError());
+#endif
         std::cerr << "SDL initialization error: " << SDL_GetError() << '\n';
         return false;
     }
 
     sdlInitialized = true;
+#if defined(__ANDROID__)
+    SDL_Log("RoadLife startup [2/6]: SDL initialized; creating window and GLES context");
+#endif
 
     if (!window.create("RoadLife Engine 0.4", 1280, 720))
     {
@@ -40,23 +49,42 @@ bool Application::initialize()
         return false;
     }
 
+#if defined(__ANDROID__)
+    const auto* glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    const auto* glRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    SDL_Log("RoadLife startup [3/6]: GL_VERSION=%s; GL_RENDERER=%s",
+            glVersion ? glVersion : "(null)",
+            glRenderer ? glRenderer : "(null)");
+#endif
     std::cout << "RoadLife Engine 0.4\n";
     std::cout << "OpenGL: " << glGetString(GL_VERSION) << '\n';
     std::cout << "GPU: " << glGetString(GL_RENDERER) << '\n';
 
+#if defined(__ANDROID__)
+    SDL_Log("RoadLife startup [4/6]: initializing renderer");
+#endif
     renderer = std::make_unique<OpenGLRenderer>();
 
     if (!renderer->initialize())
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "RoadLife startup: renderer initialization FAILED");
+#endif
         std::cerr << "Renderer initialization failed\n";
         shutdown();
         return false;
     }
 
+#if defined(__ANDROID__)
+    SDL_Log("RoadLife startup [5/6]: constructing scene and GPU resources");
+#endif
     scene = std::make_unique<Scene>();
 
     if (!scene->isValid())
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "RoadLife startup: Scene::isValid() FAILED");
+#endif
         std::cerr << "Scene initialization failed\n";
         shutdown();
         return false;
@@ -78,6 +106,9 @@ bool Application::initialize()
     window.setMouseCaptured(mouseCaptured);
 
     time.initialize();
+#if defined(__ANDROID__)
+    SDL_Log("RoadLife startup [6/6]: all systems initialized");
+#endif
 
     running = true;
     initialized = true;

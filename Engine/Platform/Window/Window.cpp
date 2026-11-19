@@ -1,6 +1,9 @@
 #include "Window.h"
 
 #include <iostream>
+#if defined(__ANDROID__)
+#include <SDL3/SDL.h>
+#endif
 
 Window::~Window()
 {
@@ -24,6 +27,9 @@ bool Window::create(const char* title, int requestedWidth, int requestedHeight)
         !SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24) ||
         !SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1))
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Window: setting GLES attributes failed: %s", SDL_GetError());
+#endif
         std::cerr << "OpenGL attribute error: " << SDL_GetError() << '\n';
         return false;
     }
@@ -43,6 +49,9 @@ bool Window::create(const char* title, int requestedWidth, int requestedHeight)
 
     if (!handle)
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Window: SDL_CreateWindow failed: %s", SDL_GetError());
+#endif
         std::cerr << "Window creation error: " << SDL_GetError() << '\n';
         return false;
     }
@@ -51,11 +60,17 @@ bool Window::create(const char* title, int requestedWidth, int requestedHeight)
 
     if (!context)
     {
+#if defined(__ANDROID__)
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Window: SDL_GL_CreateContext failed: %s", SDL_GetError());
+#endif
         std::cerr << "OpenGL context error: " << SDL_GetError() << '\n';
         destroy();
         return false;
     }
 
+#if defined(__ANDROID__)
+    SDL_Log("Window: GLES context created successfully");
+#endif
     width = requestedWidth;
     height = requestedHeight;
 
