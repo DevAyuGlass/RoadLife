@@ -6,6 +6,8 @@
 #include <array>
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <limits>
 
 // ============================================================
 // MAIN VERTEX SHADER
@@ -487,6 +489,90 @@ bool Scene::spawnCube(const glm::vec3& position, float scale)
 void Scene::clearObjects()
 {
     objects.clear();
+}
+
+bool Scene::saveWorld(const std::string& path) const
+{
+    if (path.empty())
+        return false;
+
+    std::ofstream file(path, std::ios::out | std::ios::trunc);
+    if (!file)
+        return false;
+
+    file << "ROADLIFE_WORLD 1\n";
+    file.precision(std::numeric_limits<float>::max_digits10);
+    file << timeOfDay << ' ' << objects.size() << '\n';
+
+    for (const auto& object : objects)
+    {
+        file << object.position.x << ' ' << object.position.y << ' ' << object.position.z << ' '
+             << object.scale.x << ' ' << object.scale.y << ' ' << object.scale.z << ' '
+             << object.color.r << ' ' << object.color.g << ' ' << object.color.b << ' '
+             << object.specular.r << ' ' << object.specular.g << ' ' << object.specular.b << '\n';
+    }
+
+    return file.good();
+}
+
+bool Scene::loadWorld(const std::string& path)
+{
+    if (path.empty())
+        return false;
+
+    std::ifstream file(path);
+    if (!file)
+        return false;
+
+    std::string magic;
+    int version = 0;
+    if (!(file >> magic >> version) || magic != "ROADLIFE_WORLD" || version != 1)
+        return false;
+
+    float loadedTime = 0.0f;
+    std::size_t count = 0;
+    if (!(file >> loadedTime >> count) || !std::isfinite(loadedTime) || count > 2000)
+        return false;
+
+    std::vector<Object> loadedObjects;
+    loadedObjects.reserve(count);
+
+    const auto validVector = [](const glm::vec3& value, float limit)
+    {
+        return std::isfinite(value.x) && std::isfinite(value.y) &&
+               std::isfinite(value.z) &&
+               std::abs(value.x) <= limit && std::abs(value.y) <= limit &&
+               std::abs(value.z) <= limit;
+    };
+
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        Object object{};
+        if (!(file >> object.position.x >> object.position.y >> object.position.z
+                   >> object.scale.x >> object.scale.y >> object.scale.z
+                   >> object.color.r >> object.color.g >> object.color.b
+                   >> object.specular.r >> object.specular.g >> object.specular.b))
+            return false;
+
+        if (!validVector(object.position, 10000.0f) ||
+            !validVector(object.scale, 20.0f) ||
+            !validVector(object.color, 1.0f) ||
+            !validVector(object.specular, 4.0f) ||
+            object.scale.x < 0.1f || object.scale.y < 0.1f || object.scale.z < 0.1f ||
+            object.color.r < 0.0f || object.color.g < 0.0f || object.color.b < 0.0f ||
+            object.specular.r < 0.0f || object.specular.g < 0.0f || object.specular.b < 0.0f)
+            return false;
+
+        loadedObjects.push_back(object);
+    }
+
+    std::string trailing;
+    if (file >> trailing)
+        return false;
+
+    objects.swap(loadedObjects);
+    setTimeOfDay(loadedTime);
+    return true;
 }
 
 bool Scene::snapPlayerToSupport(

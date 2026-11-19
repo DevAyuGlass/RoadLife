@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 #include "../Renderer/GL.h"
 
@@ -39,6 +40,8 @@ public:
     std::size_t getObjectCount() const;
     bool spawnCube(const glm::vec3& position, float scale);
     void clearObjects();
+    bool saveWorld(const std::string& path) const;
+    bool loadWorld(const std::string& path);
     bool snapPlayerToSupport(glm::vec3& position, float radius, float eyeHeight) const;
     void resolvePlayerCollision(const glm::vec3& previousPosition,
                                 glm::vec3& position, float radius,

@@ -262,6 +262,9 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
         addLine("  objects              - show scene object count");
         addLine("  spawn cube x y z [s] - spawn a cube (default size 1)");
         addLine("  objects clear        - remove all scene cubes");
+        addLine("  world save [file]    - save objects and time of day");
+        addLine("  world load [file]    - load a saved world");
+        addLine("  world info           - show world summary");
         addLine("  status               - show current engine/world status");
         addLine("  time dawn|noon|sunset|midnight - quick time presets");
         addLine("  history              - show recent commands");
@@ -501,6 +504,34 @@ void DeveloperConsole::executeCommand(Scene& scene, Camera& camera, float fps)
                 " | fog " + (scene.isFogEnabled() ? "ON" : "OFF") +
                 " | grid " + (scene.isGridEnabled() ? "ON" : "OFF") +
                 " | wireframe " + (scene.isWireframe() ? "ON" : "OFF"));
+    }
+    else if (first == "world")
+    {
+        const std::string path = third.empty() ? "roadlife.world" : third;
+        if (second == "save")
+        {
+            if (scene.saveWorld(path))
+                addLine("[SUCCESS] World saved to '" + path + "'.");
+            else
+                addLine("[ERROR] Could not save world to '" + path + "'.");
+        }
+        else if (second == "load")
+        {
+            if (scene.loadWorld(path))
+                addLine("[SUCCESS] World loaded from '" + path + "'. Objects: " +
+                        std::to_string(scene.getObjectCount()));
+            else
+                addLine("[ERROR] World file is missing, damaged, or unsupported.");
+        }
+        else if (second == "info")
+        {
+            addLine("[INFO] World | objects: " + std::to_string(scene.getObjectCount()) +
+                    " | time: " + formatTime(scene.getTimeOfDay()));
+        }
+        else
+        {
+            addLine("[WARNING] Usage: world save|load [file] | world info");
+        }
     }
     else if (first == "objects")
     {
