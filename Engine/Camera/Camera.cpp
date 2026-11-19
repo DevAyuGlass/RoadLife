@@ -25,7 +25,7 @@ glm::vec3 Camera::getFront() const
     return glm::normalize(direction);
 }
 
-void Camera::setMode(Mode value)
+void Camera::setMode(Mode value, Scene& scene)
 {
     if (mode == value)
         return;
@@ -39,9 +39,9 @@ void Camera::setMode(Mode value)
 
     if (mode == Mode::Walk)
     {
-        // Ground plane is at Y=-1.02; position is the camera/eye position.
-        position.y = -1.02f + 0.63f;
-        grounded = true;
+        // Keep the flight position; only attach to a surface if the feet are
+        // already close to it. Otherwise normal gravity takes over.
+        grounded = scene.snapPlayerToSupport(position, 0.32f, currentEyeHeight);
     }
 }
 
